@@ -1,0 +1,25 @@
+{
+    "configuracion": {
+        "idioma": "Español",
+        "traducciones": {
+            "Español": [
+                "Inicio",
+                "Vender",
+                "Inventario",
+                "Cotizacion",
+                "Historial de Ventas",
+                "Estadisticas",
+                "Configuracion"
+            ],
+            "English": [
+                "Home",
+                "Sales",
+                "Inventory",
+                "Quotation",
+                "Sales History",
+                "Statistics",
+                "Settings"
+            ]
+        }
+    }
+}

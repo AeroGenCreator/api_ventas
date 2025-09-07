@@ -1,0 +1,72 @@
+{
+    "Clave SAT": [
+        null,
+        null,
+        null,
+        null,
+        "STR43"
+    ],
+    "Producto": [
+        "TUBO COBRE",
+        "CODO 45",
+        "SOLDADURA TANGIT ROSA",
+        "AZULEJO ROCOCO GRIS PIEDRA MADERA",
+        "AZULEJO CIELO MOLTE"
+    ],
+    "Cantidad": [
+        2,
+        1,
+        2,
+        3,
+        3
+    ],
+    "Unidad": [
+        "Pz (s)",
+        "Pz (s)",
+        "Pz (s)",
+        "Paquete (s)",
+        "Paquete (s)"
+    ],
+    "Dimension": [
+        "2",
+        "21",
+        "0.8",
+        "15",
+        "18"
+    ],
+    "U. Medida": [
+        "Kg (s)",
+        "Kg (s)",
+        "Kg (s)",
+        "Pz (s)",
+        "Pz (s)"
+    ],
+    "Precio Compra": [
+        32,
+        21,
+        32,
+        120,
+        120
+    ],
+    "Porcentaje Ganancia": [
+        1.0,
+        0.32,
+        0.3,
+        0.3,
+        0.3
+    ],
+    "Precio Venta": [
+        64.0,
+        27.720000000000002,
+        41.6,
+        156.0,
+        156.0
+    ],
+    "Codigo": [
+        77625733,
+        21372935,
+        25501267,
+        35768008,
+        89793497
+    ]
+}
