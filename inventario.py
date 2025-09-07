@@ -188,7 +188,7 @@ def formulario_entrada_catalogo():
                 help=':orange[Producto] (Maximo 28 Caracteres)',
                 required=True,
                 pinned=True,
-                max_chars=35
+                max_chars=40
             ),
             'Cantidad':st.column_config.NumberColumn(
                 width=40,
@@ -662,23 +662,22 @@ def crear_etiquetas_codigo():
 
                 crear_etiquetas = st.button(label='Crear Etiquetas', key='crear_etiquetas', type='primary',width='stretch')
                 if crear_etiquetas:
+                    
                     output_dir = 'codigos_productos'
                     os.makedirs(output_dir, exist_ok=True)
 
                     try:
-                        font_path_nombre = ImageFont.truetype('arial.ttf',24)
-                        font_path_codigo = ImageFont.truetype('arial.ttf',20)
+                        font_path_nombre = ImageFont.truetype('Ubuntu-B.ttf',16)
                     except IOError:
                         font_path_nombre = ImageFont.load_default()
-                        font_path_codigo = ImageFont.load_default()
                         print("Advertencia: No se encontró 'arial.ttf'. Usando fuente por defecto de Pillow.")
                     
                     for index,row in producto_codigo.iterrows():
                         code_128 = Code128(row['Codigo'], writer=ImageWriter())
-                        barcode_img = code_128.render(writer_options={'module_height':10,'text_distance':1,'font_size':10})
+                        barcode_img = code_128.render(writer_options={'module_height':9,'text_distance':3,'font_size':7})
 
-                        LABEL_WIDTH=500
-                        LABEL_HEIGHT=200
+                        LABEL_WIDTH=650
+                        LABEL_HEIGHT=210
 
                         etiqueta_img = Image.new('RGB',(LABEL_WIDTH,LABEL_HEIGHT),'white')
                         draw = ImageDraw.Draw(etiqueta_img)
@@ -686,13 +685,16 @@ def crear_etiquetas_codigo():
                         barcode_width, barcode_height = barcode_img.size
 
                         barcode_x =  (LABEL_WIDTH - barcode_width) // 2
-                        barcode_y = (LABEL_HEIGHT - barcode_height) // 2 - 30
+                        barcode_y = ((LABEL_HEIGHT - barcode_height) // 2) + 15
 
                         etiqueta_img.paste(barcode_img,(barcode_x,barcode_y))
 
-                        draw.text((100,10 ), row['Producto Y Modelo'], font=font_path_nombre, fill='black')
-
-                        draw.text((100,10 ), row['Codigo'], font=font_path_codigo, fill='black')
+                        box_size = draw.textbbox((0,0),row['Producto Y Modelo'],font=font_path_nombre)
+                        p_x = box_size[2] - box_size[0]
+                        p_y = box_size[3] - box_size[1]
+                        x_producto = (LABEL_WIDTH - p_x) // 2
+                        y_producto = ((LABEL_HEIGHT - p_y) // 2) - 80
+                        draw.text((x_producto,y_producto ), row['Producto Y Modelo'], font=font_path_nombre, fill='black')
 
                         output_filename = os.path.join(output_dir, f"etiqueta_{row['Codigo']}.png")
                         etiqueta_img.save(output_filename)
