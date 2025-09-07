@@ -13,7 +13,7 @@ import streamlit_tags as tgs
 import streamlit as st
 import pandas as pd
 import numpy as np
-import barcode
+from barcode.codex import Code128
 from barcode.writer import ImageWriter
 from PIL import Image, ImageDraw, ImageFont
 
@@ -657,7 +657,7 @@ def crear_etiquetas_codigo():
                 df = pd.DataFrame(data=datos)
 
                 df['Producto Y Modelo'] = df['Producto']+' '+df['Dimension']+' '+df['U. Medida']
-                
+                df['Codigo'] = df['Codigo'].astype('str')
                 producto_codigo = df[['Producto Y Modelo','Codigo']]
 
                 crear_etiquetas = st.button(label='Crear Etiquetas', key='crear_etiquetas', type='primary',width='stretch')
@@ -665,20 +665,41 @@ def crear_etiquetas_codigo():
                     output_dir = 'codigos_productos'
                     os.makedirs(output_dir, exist_ok=True)
 
-                try:
-                    fuente_ruta_producto = ImageFont.truetype('arial.ttf',24)
-                    fuente_ruta_codigo = ImageFont.truetype('arial.ttf',20)
-                except IOError:
-                    font_path_nombre = ImageFont.load_default()
-                    font_path_codigo = ImageFont.load_default()
-                    print("Advertencia: No se encontró 'arial.ttf'. Usando fuente por defecto de Pillow.")
-                
-                for index,row in producto_codigo.iterrows():
-                    code_128 = barcode.get('code_128', row['Codigo'], writer=ImageWriter())
-                    # CONTINUAR AQUI
+                    try:
+                        font_path_nombre = ImageFont.truetype('arial.ttf',24)
+                        font_path_codigo = ImageFont.truetype('arial.ttf',20)
+                    except IOError:
+                        font_path_nombre = ImageFont.load_default()
+                        font_path_codigo = ImageFont.load_default()
+                        print("Advertencia: No se encontró 'arial.ttf'. Usando fuente por defecto de Pillow.")
+                    
+                    for index,row in producto_codigo.iterrows():
+                        code_128 = Code128(row['Codigo'], writer=ImageWriter())
+                        barcode_img = code_128.render(writer_options={'module_height':10,'text_distance':1,'font_size':10})
+
+                        LABEL_WIDTH=500
+                        LABEL_HEIGHT=200
+
+                        etiqueta_img = Image.new('RGB',(LABEL_WIDTH,LABEL_HEIGHT),'white')
+                        draw = ImageDraw.Draw(etiqueta_img)
+
+                        barcode_width, barcode_height = barcode_img.size
+
+                        barcode_x =  (LABEL_WIDTH - barcode_width) // 2
+                        barcode_y = (LABEL_HEIGHT - barcode_height) // 2 - 30
+
+                        etiqueta_img.paste(barcode_img,(barcode_x,barcode_y))
+
+                        draw.text((100,10 ), row['Producto Y Modelo'], font=font_path_nombre, fill='black')
+
+                        draw.text((100,10 ), row['Codigo'], font=font_path_codigo, fill='black')
+
+                        output_filename = os.path.join(output_dir, f"etiqueta_{row['Codigo']}.png")
+                        etiqueta_img.save(output_filename)
+
         else:
             st.warning('No Hay Productos En El :orange[Inventario]')
-    except(FileExistsError, FileNotFoundError, json.JSONDecodeError, TypeError):
+    except(json.JSONDecodeError):
         st.error('Error Al Acceder Al Archivo De Inventario')
 
 l = lenguaje.tu_idioma()
@@ -719,4 +740,4 @@ if seleccion_inventario_opciones == ':material/barcode_scanner: Ajustar Producto
     st.write('En Construccion')
 
 if seleccion_inventario_opciones == ':material/label: Imprimir Etiquetas de Codigo':
-    st.write('En Construccion')
+    crear_etiquetas_codigo()
