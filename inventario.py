@@ -23,45 +23,35 @@ PATH_PRODUCTOS = 'catalogo_productos.json'
 def entrada_al_catalogo(entrada:dict):
     """Esta funcion agregar entradas nuevas de inventario 
     en la base de datos catalogo de productos"""
-
-        # Aqui se evalua la existencia de la ruta.
-        # Primero evaluo si existe el archivo y si contiene informacion 
     try:
+        # Aqui se evalua la existencia de la ruta y si existe informacion
         if os.path.exists(PATH_PRODUCTOS) and os.path.getsize(PATH_PRODUCTOS)>0:
-            with open(PATH_PRODUCTOS, 'r', encoding='utf-8') as f1:               
+            with open(PATH_PRODUCTOS, 'r', encoding='utf-8') as f:               
                 
                 # Parseo los datos de json a python.
-                data = json.load(f1)
+                data = json.load(f)
                 
-                # Creo un DataFrame con los datos de lectura
+                # Creo un DataFrame con los datos de lectura y otro con los datos nuevos
                 df = pd.DataFrame(data)
-                
-                # Creo un DataFrame con los datos recibidos desde el "Formulario de Entradas"
                 df_entrada = pd.DataFrame(entrada)
 
-                # Lista con codigos existentes en ROM
+                # Este fragmento genera nuevos codigos para los nuevos datos asegurandose que no haya repetidos.
                 codigos_existentes = set(df['Codigo'])
                 nuevos_codigos = []
-
                 while len(nuevos_codigos) < len(df_entrada):
                     nuevo_codigo = np.random.randint(10000000, 100000000)
                     if nuevo_codigo not in codigos_existentes:
                         nuevos_codigos.append(nuevo_codigo)
-
                 df_entrada['Codigo'] = nuevos_codigos
 
-                # Listo ambos DataFrames en 'frames'
+                # Concateno los dos DataFrames:
                 frames = [df, df_entrada]
-                
-                # Los concateno
                 df_unido = pd.concat(frames)
                 
                 # Creo una mascara la cual busca duplicados para aquellos que cumplan con el Subset de columnas listadas:
                 df_unido['Mascara'] = df_unido.duplicated(subset=['Producto','Dimension','U. Medida'])
-
                 # Creo un DataFrame sin copias
                 df_correcto = df_unido[df_unido['Mascara'] == False]
-                
                 # Creo un Dataframe con las copias
                 df_incorrecto = df_unido[df_unido['Mascara'] == True]
 
@@ -79,16 +69,14 @@ def entrada_al_catalogo(entrada:dict):
                     'Codigo':df_correcto['Codigo'].to_list()
                 }
         
-                # Abro la ruta de la memoria ROM en modo escritura en e_file
-                with open(PATH_PRODUCTOS, 'w', encoding='utf-8') as e_file:   
-                    # Parseo y escribo el diccionario con las nuevas entras y sin repetidos
-                    json.dump(escritura_sin_duplicados, e_file, indent=4, ensure_ascii=False)
-                    # Elimino la columna de mascara para el DataFrame con copias
-                    df_incorrecto = df_incorrecto.drop(['Mascara'], axis=1)
-                    # Si el DataFrame NO esta vacio lo muestro en pantalla con el siguiente mensaje
+                # Abro la ruta de la memoria ROM en modo escritura en f1 y guardo la nueva informacion
+                with open(PATH_PRODUCTOS, 'w', encoding='utf-8') as f1:
+                    json.dump(escritura_sin_duplicados, f1, indent=4, ensure_ascii=False)
                     
+                    # Elimino la columna de mascara para el DataFrame con copias, si tiene datos lo muestro en pantalla:
+                    df_incorrecto = df_incorrecto.drop(['Mascara'], axis=1)
                     if not df_incorrecto.empty:
-                        st.warning('Los Siguientes No Se Guardaron por Ser Duplicados')
+                        st.warning('Los Siguientes Son Duplicados')
                         st.dataframe(
                             df_incorrecto,
                             column_config={
@@ -99,29 +87,27 @@ def entrada_al_catalogo(entrada:dict):
                             )
                         st.error('NO HAN SIDO SOBRE-ESCRITOS')
                         return
-                    
                     # Si el DataFrame de duplicados si esta vacio, regresa el siguiente mensaje:    
-                    else:
-                        return st.success('DATOS AGREGADOS CON EXITO')
+                    return st.success('DATOS AGREGADOS CON EXITO')
+                
         else:
+            # Si el archivo existe pero esta vacio, agrego directamente los nuevos datos:
             with open(PATH_PRODUCTOS,'w',encoding='utf-8') as f2:
                 json.dump(entrada,f2,indent=4,ensure_ascii=False)
-                return st.success('EDATOS AGREGADOS CON EXITO')
-            
+                return st.success('DATOS AGREGADOS CON EXITO')
+
+    # En dado caso de tener problemas encontrando el archivo o con la decodificacion:     
     except(FileExistsError,FileNotFoundError,json.JSONDecodeError):
-        # En dado caso de tener problemas encontrando el archivo o con la decodificacion:
         with open(PATH_PRODUCTOS, 'w', encoding='utf-8') as f3:
-            # Parseamos y escribimos en el archivo json
             json.dump(entrada, f3, indent=4, ensure_ascii=False)
-            # Mandamos el siguiente mensaje:
-            return st.success('EDATOS AGREGADOS CON EXITO')
+            return st.success('DATOS AGREGADOS CON EXITO')
 
 def formulario_entrada_catalogo():
-    """En esta seccion se despliega un DataFrame editable. El usuario puede registrar productos
-    en la base de datos.
-    """
+    """ En esta seccion se despliega un DataFrame editable. El usuario puede registrar productos
+    en la base de datos """
     st.subheader('FORMULARIO DE ENTRADAS NUEVAS')
     
+    # Creo un DataFrame Vacio y lo asigno la memomoria cache de streamlit
     DF_FORMULARIO = pd.DataFrame(
         {
             'Clave SAT':[None],
@@ -136,19 +122,16 @@ def formulario_entrada_catalogo():
             'Codigo':[None]
         }
     )
-    # st.session_state.df_vacio
     if 'df_form' not in st.session_state:
         st.session_state.df_form = DF_FORMULARIO
 
-    # Aqui declaro las opciones permitidas en la seleccion de unidades para la columna 'Unidad' del DataFrame editable.
+    # Aqui declaro las opciones permitidas en la seleccion de unidades y unidades de medida
     opciones_seleccion_unidad = [
         'Pz (s)',
         'Bolsa (s)',
         'Caja (s)',
         'Ml-Gr (s)'
         ]
-    
-    # Aqui declaro las opciones permitidas en la seleccion de unidades para la columna 'Unidades de Medida' del DataFrame editable.
     opciones_seleccion_unidad_medida = [
         'Kg (s)',
         'Lt (s)',
@@ -160,11 +143,11 @@ def formulario_entrada_catalogo():
         ]
 
     st.info(':material/lightbulb: Todas las columnas requieren un valor distinto de :red[None].\n' \
-    'Todos los :red[Campos] son obligatorios, de lo contrario dicha fila no se guarda.\n ' \
+    'Excepto Para :green[Clave SAT, Precio Venta y Codigo]. El resto de :red[Campos] son obligatorios,' \
+    'de lo contrario dicha fila no se guarda.\n ' \
     'Si un producto no cuenta con clave SAT el valor :green[None] es permitido :material/lightbulb:')
 
     # Aqui declaro el DataFrame editable y ajusto sus parametros para cada columna.
-    # Ademas que el DataFrame editable que se muestra es el que cargue previamente en la memoria cache (st.session_state['df'])
     salida = st.data_editor(
         st.session_state.df_form,
         num_rows='dynamic',
@@ -178,7 +161,7 @@ def formulario_entrada_catalogo():
             ),
             'Producto':st.column_config.TextColumn(
                 width=200,
-                help=':orange[Producto] (Maximo 28 Caracteres)',
+                help=':orange[Producto] (Maximo 40 Caracteres)',
                 required=True,
                 pinned=True,
                 max_chars=40
@@ -250,11 +233,11 @@ def formulario_entrada_catalogo():
         }
         )
     
+    # DataFrame editable regresa un diccionario, lo convierto a pandas.DataFrame
     df = pd.DataFrame(salida)
 
+    # Creo botones para la interfaz de usuario: calcular venta total, limpiar tabla, agregar productos:
     column1, column2 = st.columns(2)
-
-    # Este boton calcula la columna venta para el formulario que esta llenando el usuario
     with column1:
         calcular = st.button(
         label=':material/calculate: __CALCULAR VENTA__',
@@ -262,12 +245,7 @@ def formulario_entrada_catalogo():
         type='secondary',
         width=400,
         help=':orange[Calcula La columna Precio Venta Con Base En El Porcentaje Dado]'
-        )
-        if calcular:
-            df['Precio Venta'] = df['Precio Compra'] * (1 + df['Porcentaje Ganancia'])
-            st.session_state.df_form = df
-    
-    # Este boton elimina el session_state.df_form, o sea lo limpia para comenzar de cero.
+        )   
     with column2:
         reset = st.button(
         label=':material/cleaning_services: __LIMPIAR TABLA__',
@@ -275,15 +253,7 @@ def formulario_entrada_catalogo():
         width=400,
         key='reset_cache',
         help=':orange[Limpiar La Tabla Elimina Cualquier Registro]'
-        )
-        if reset:
-            try:
-                st.session_state.df_form = DF_FORMULARIO
-            except KeyError:
-                if 'df_form' not in st.session_state:
-                    st.session_state.df_form = DF_FORMULARIO
-
-    # Aqui se valida la agreacion de producto a la memoria ROM ('catalogo_productos.json')
+        )  
     agregar_data = st.button(
         label=':material/docs_add_on: __Agregar Productos__',
         key='agregar_data',
@@ -291,8 +261,17 @@ def formulario_entrada_catalogo():
         width=800
         )
     
+    if calcular:
+                df['Precio Venta'] = df['Precio Compra'] * (1 + df['Porcentaje Ganancia'])
+                st.session_state.df_form = df
+    if reset:
+                try:
+                    st.session_state.df_form = DF_FORMULARIO
+                except KeyError:
+                    if 'df_form' not in st.session_state:
+                        st.session_state.df_form = DF_FORMULARIO
     if agregar_data:
-
+        # Convierto el DataFrame editable en pandas.DataFrame
         df = pd.DataFrame(salida)
         
         # Aqui reinicio el DataFrame guardado en el diccionario cache de Streamlit
@@ -303,7 +282,6 @@ def formulario_entrada_catalogo():
                 st.session_state.df_form = DF_FORMULARIO
         
         # Aqui elimino las filas que no contengan datos en las columnas listadas (exepto para Clave SAT, P. Venta y Codigo)
-        # Los productos sin Clave SAT guardan su valor SAT como Null en Json
         df = df.dropna(
             axis=0,
             how='any',
@@ -329,13 +307,11 @@ def formulario_entrada_catalogo():
         # Genero Codigos y limpio hasta estar seguro que no hay codigos duplicados
         codigos_generados = set()
         nuevos_codigos = []
-
         while len(nuevos_codigos) < len(df):
             nuevo_codigo = np.random.randint(10000000, 100000000)
             if nuevo_codigo not in codigos_generados:
                 codigos_generados.add(nuevo_codigo)
                 nuevos_codigos.append(nuevo_codigo)
-
         df['Codigo'] = nuevos_codigos
 
         # Aqui ocupo la libreria de numpy para tranformar los datos NaN a None para despues ser pasados a Null
@@ -344,7 +320,7 @@ def formulario_entrada_catalogo():
         patron1 = r'\.\d+'
         patron2 = r'0+\.\d+'
         df['Dimension'] = df['Dimension'].apply(lambda x: '0'+x if re.fullmatch(patron1,x) else str(float(x)) if re.fullmatch(patron2,x) else x)
-        # Aqui aplico un formato de titulo a la columna producto.
+        # Aqui aplico un formato de Mayusculas a la columna producto.
         df['Producto'] = df['Producto'].apply(lambda x: x.upper().strip())
         # Creo una columna que contiene Producto Y Modelo
         df['Entrada'] = df['Producto']+' '+df['Dimension']+' '+df['U. Medida']
@@ -368,9 +344,9 @@ def ver_inventario_completo():
         if os.path.exists(PATH_PRODUCTOS) and os.path.getsize(PATH_PRODUCTOS) > 0:
             # Si se pasa el primer filtro abrimos el archivo json en lectura
             with open(PATH_PRODUCTOS, 'r', encoding='utf-8') as lectura_file:
-                
                 datos = json.load(lectura_file)
                 df = pd.DataFrame(datos)
+
                 #Creamos una copia del DataFrame y creo una columna que une Producto, Dimension Y U. Medida
                 df_copia = df.copy()
                 df_copia['Producto Y Modelo'] = df_copia['Producto'] + ' ' + df_copia['Dimension'] + ' ' + df_copia['U. Medida']
@@ -667,60 +643,84 @@ def eliminar_entradas():
         st.warning('No Hay Productos en el :orange[Inventario]')
 
 def crear_etiquetas_codigo():
+    """" Es codigo genera codigos de barras y sus etiquetas para ser descargados"""
     try:
+        # Leo los datos desde la base de datos y los cargo a un DataFrame
         if os.path.exists(PATH_PRODUCTOS) and os.path.getsize(PATH_PRODUCTOS) > 0:
             with open(PATH_PRODUCTOS,'r',encoding='utf-8') as f:
-                datos = json.load(f)
+                df = pd.DataFrame(data=json.load(f))
+
+            # Preparo las columnas que utilizare:
+            df['Producto Y Modelo'] = df['Producto']+' '+df['Dimension']+' '+df['U. Medida']
+            df['Codigo'] = df['Codigo'].astype('str')
+
+            # Opcion de filtro y crear etiquetas para la interfaz de usuario:
+            seleccion_especifica = st.multiselect(
+                label='Selecciona Las Etiquetas Deseadas',
+                key='seleccion_especifica',
+                options=df['Producto Y Modelo'].tolist()
+            )
+            crear_etiquetas = st.button(
+                label='Crear Etiquetas',
+                key='crear_etiquetas',
+                type='primary',
+                width='stretch'
+                )
+
+            # Creacion de etiquetas
+            if crear_etiquetas:
+                # Aqui modifico las etiquetas que seran impresas si True, entonces filtro:
+                if seleccion_especifica:
+                    df = df[df['Producto Y Modelo'].isin(seleccion_especifica)]
                 
-                df = pd.DataFrame(data=datos)
+                # Creo el directorio en el que se guardaran las etiquetas:
+                output_dir = 'codigos_productos'
+                os.makedirs(output_dir, exist_ok=True)
 
-                df['Producto Y Modelo'] = df['Producto']+' '+df['Dimension']+' '+df['U. Medida']
-                df['Codigo'] = df['Codigo'].astype('str')
-                producto_codigo = df[['Producto Y Modelo','Codigo']]
+                # Para el manejo de imagenes, establesco los parametros de 'fuente'
+                try:
+                    font_path_nombre = ImageFont.truetype('Ubuntu-B.ttf',16)
+                except IOError:
+                    font_path_nombre = ImageFont.load_default()
+                
+                # Itero sobre todos los productos 'DataFrame' o los productos 'seleccionados':
+                for index,row in df.iterrows():
+                    # Aqui genero el codigo de barras como imagen y edito sus parametros: 
+                    code_128 = Code128(row['Codigo'], writer=ImageWriter())
+                    barcode_img = code_128.render(writer_options={'module_height':9,'text_distance':3,'font_size':7})
 
-                crear_etiquetas = st.button(label='Crear Etiquetas', key='crear_etiquetas', type='primary',width='stretch')
-                if crear_etiquetas:
-                    
-                    output_dir = 'codigos_productos'
-                    os.makedirs(output_dir, exist_ok=True)
+                    # Aqui establezco el tamanho de las etiquetas finales:
+                    LABEL_WIDTH=650
+                    LABEL_HEIGHT=210
 
-                    try:
-                        font_path_nombre = ImageFont.truetype('Ubuntu-B.ttf',16)
-                    except IOError:
-                        font_path_nombre = ImageFont.load_default()
-                        print("Advertencia: No se encontró 'arial.ttf'. Usando fuente por defecto de Pillow.")
-                    
-                    for index,row in producto_codigo.iterrows():
-                        code_128 = Code128(row['Codigo'], writer=ImageWriter())
-                        barcode_img = code_128.render(writer_options={'module_height':9,'text_distance':3,'font_size':7})
+                    etiqueta_img = Image.new('RGB',(LABEL_WIDTH,LABEL_HEIGHT),'white')
+                    draw = ImageDraw.Draw(etiqueta_img)
 
-                        LABEL_WIDTH=650
-                        LABEL_HEIGHT=210
+                    barcode_width, barcode_height = barcode_img.size
 
-                        etiqueta_img = Image.new('RGB',(LABEL_WIDTH,LABEL_HEIGHT),'white')
-                        draw = ImageDraw.Draw(etiqueta_img)
+                    barcode_x =  (LABEL_WIDTH - barcode_width) // 2
+                    barcode_y = ((LABEL_HEIGHT - barcode_height) // 2) + 15
 
-                        barcode_width, barcode_height = barcode_img.size
+                    etiqueta_img.paste(barcode_img,(barcode_x,barcode_y))
 
-                        barcode_x =  (LABEL_WIDTH - barcode_width) // 2
-                        barcode_y = ((LABEL_HEIGHT - barcode_height) // 2) + 15
+                    box_size = draw.textbbox((0,0),row['Producto Y Modelo'],font=font_path_nombre)
+                    p_x = box_size[2] - box_size[0]
+                    p_y = box_size[3] - box_size[1]
+                    x_producto = (LABEL_WIDTH - p_x) // 2
+                    y_producto = ((LABEL_HEIGHT - p_y) // 2) - 80
+                    draw.text((x_producto,y_producto ), row['Producto Y Modelo'], font=font_path_nombre, fill='black')
 
-                        etiqueta_img.paste(barcode_img,(barcode_x,barcode_y))
-
-                        box_size = draw.textbbox((0,0),row['Producto Y Modelo'],font=font_path_nombre)
-                        p_x = box_size[2] - box_size[0]
-                        p_y = box_size[3] - box_size[1]
-                        x_producto = (LABEL_WIDTH - p_x) // 2
-                        y_producto = ((LABEL_HEIGHT - p_y) // 2) - 80
-                        draw.text((x_producto,y_producto ), row['Producto Y Modelo'], font=font_path_nombre, fill='black')
-
-                        output_filename = os.path.join(output_dir, f"etiqueta_{row['Codigo']}.png")
-                        etiqueta_img.save(output_filename)
+                    output_filename = os.path.join(output_dir, f"etiqueta_{row['Codigo']}.png")
+                    etiqueta_img.save(output_filename)
 
         else:
             st.warning('No Hay Productos En El :orange[Inventario]')
     except(json.JSONDecodeError):
         st.error('Error Al Acceder Al Archivo De Inventario')
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------
+# AQUI COMIENZA LA EJECUCION DEL ARCHIVO ------------------------------------------------------------------------------------------
 
 l = lenguaje.tu_idioma()
 st.title(f':material/inventory_2: {l.phrase[2]}')
