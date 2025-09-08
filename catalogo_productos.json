@@ -4,69 +4,69 @@
         null,
         null,
         null,
-        "STR43"
+        null
     ],
     "Producto": [
         "TUBO COBRE",
-        "CODO 45",
+        "TUBO COBRE",
+        "TUBO COBRE",
         "SOLDADURA TANGIT ROSA",
-        "AZULEJO ROCOCO GRIS PIEDRA MADERA",
-        "AZULEJO CIELO MOLTE"
+        "AZULEJO VALENCIA ROCA ROJO ESCARVADO  PD"
     ],
     "Cantidad": [
         2,
-        1,
         2,
         3,
-        3
+        3,
+        11
     ],
     "Unidad": [
         "Pz (s)",
         "Pz (s)",
         "Pz (s)",
-        "Paquete (s)",
-        "Paquete (s)"
+        "Pz (s)",
+        "Caja (s)"
     ],
     "Dimension": [
-        "2",
-        "21",
-        "0.8",
-        "15",
-        "18"
+        "1/4",
+        "1/2",
+        "1",
+        "0.08",
+        "9"
     ],
     "U. Medida": [
+        "Pulgada (s)",
+        "Pulgada (s)",
+        "Pulgada (s)",
         "Kg (s)",
-        "Kg (s)",
-        "Kg (s)",
-        "Pz (s)",
-        "Pz (s)"
+        "Mt (s) Cuadrado (s)"
     ],
     "Precio Compra": [
-        32,
-        21,
-        32,
-        120,
-        120
+        90.0,
+        100.0,
+        120.0,
+        45.0,
+        174.55
     ],
     "Porcentaje Ganancia": [
-        1.0,
-        0.32,
         0.3,
         0.3,
-        0.3
+        0.3,
+        0.3,
+        0.25
     ],
     "Precio Venta": [
-        64.0,
-        27.720000000000002,
-        41.6,
+        117.0,
+        130.0,
         156.0,
-        156.0
+        58.5,
+        218.19
     ],
     "Codigo": [
-        77625733,
-        21372935,
-        25501267,
-        35768008,
-        89793497
+        73225528,
+        47655992,
+        92970242,
+        52662345,
+        64478880
     ]
 }

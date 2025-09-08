@@ -189,7 +189,7 @@ try:
 
             # Establezco los parametros de la hoja, fuente, color, tamanho
             pdf.add_page()
-            pdf.set_font("Arial", size=9)
+            pdf.set_font("Arial", size=8)
             pdf.set_line_width(0.1)
             pdf.set_draw_color(245,222,179)
             pdf.set_fill_color(245,222,179)#204,255,229

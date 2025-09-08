@@ -27,97 +27,92 @@ def entrada_al_catalogo(entrada:dict):
         # Aqui se evalua la existencia de la ruta.
         # Primero evaluo si existe el archivo y si contiene informacion 
     try:
-        with open(PATH_PRODUCTOS, 'r', encoding='utf-8') as l_file:               
-            # Parseo los datos de json a python.
-            data = json.load(l_file)
-            # Creo un DataFrame con los datos de lectura
-            df_data = pd.DataFrame(data)
-            # Creo un DataFrame con los datos recibidos desde el "Formulario de Entradas"
-            df_entrada = pd.DataFrame(entrada)
-
-            codigos_existentes = df_data['Codigo'].to_list()
-            codigos_repetidos = []
-            df_entrada['Codigo'].apply(lambda x: codigos_repetidos.append(x) if x in codigos_existentes else x)
-            df_entrada = df_entrada[~df_entrada['Codigo'].isin(codigos_repetidos)]
-            df_codigos_duplicados = df_entrada[df_entrada['Codigo'].isin(codigos_repetidos)]
-
-            if not df_codigos_duplicados.empty:
-                st.warning('Se Repitieron Los Siguientes Codigos de Barras:')
-                return st.dataframe(df_codigos_duplicados)
-            else:
-                if df_entrada.empty:
-                    st.warning('Se Repitieron Los Siguientes Codigos de Barras:')
-                    return st.dataframe(df_codigos_duplicados)
-                else:
-                    # Listo ambos DataFrames en 'frames'
-                    frames = [df_data, df_entrada]
-                    # Los concateno
-                    df_unido = pd.concat(frames)
-                    # Creo una mascara la cual busca duplicados para aquellos que cumplan con el Subset de columnas listadas:
-                    df_unido['Mascara'] = df_unido.duplicated(subset=['Producto','Dimension','U. Medida'])
-
-                    # Creo un DataFrame sin copias
-                    df_correcto = df_unido[df_unido['Mascara'] == False]
-                    # Creo un Dataframe con las copias
-                    df_incorrecto = df_unido[df_unido['Mascara'] == True]
-
-                    # Creo un diccionario con las nuevas entradas.
-                    escritura_sin_duplicados = {
-                        'Clave SAT':df_correcto['Clave SAT'].tolist(),
-                        'Producto':df_correcto['Producto'].tolist(),
-                        'Cantidad':df_correcto['Cantidad'].tolist(),
-                        'Unidad':df_correcto['Unidad'].tolist(),
-                        'Dimension':df_correcto['Dimension'].tolist(),
-                        'U. Medida':df_correcto['U. Medida'].tolist(),
-                        'Precio Compra':df_correcto['Precio Compra'].tolist(),
-                        'Porcentaje Ganancia':df_correcto['Porcentaje Ganancia'].tolist(),
-                        'Precio Venta':df_correcto['Precio Venta'].tolist(),
-                        'Codigo':df_correcto['Codigo'].to_list()
-                    }
-        # Abro la ruta de la memoria ROM en modo escritura en e_file
-        with open(PATH_PRODUCTOS, 'w', encoding='utf-8') as e_file:
-            # Parseo y escribo el diccionario con las nuevas entras y sin repetidos
-            json.dump(escritura_sin_duplicados, e_file, indent=4, ensure_ascii=False)
-            # Elimino la columna de mascara para el DataFrame con copias
-            df_incorrecto = df_incorrecto.drop(['Mascara'], axis=1)
-            # Si el DataFrame NO esta vacio lo muestro en pantalla con el siguiente mensaje
-            if not df_incorrecto.empty:
-                duplicados_al_agregar = st.chat_message(name='human')
-                with duplicados_al_agregar:
-                    st.write(':orange[LOS SIGUIENTES SON DATOS DUPLICADOS]')
-                    st.dataframe(
-                        df_incorrecto,
-                        column_config={
-                            'Precio Compra':st.column_config.NumberColumn(format='dollar', width=50),
-                            'Porcentaje Ganancia':st.column_config.NumberColumn(format='percent', width=50),
-                            'Precio Venta':st.column_config.NumberColumn(format='dollar',width=50)
-                        }
-                        )
-                    st.error('NO HAN SIDO SOBRE-ESCRITOS')
-                    return
-            # Si el DataFrame de duplicados si esta vacio, regresa el siguiente mensaje:    
-            else:
-                return st.success('DATOS AGREGADOS CON EXITO')
+        if os.path.exists(PATH_PRODUCTOS) and os.path.getsize(PATH_PRODUCTOS)>0:
+            with open(PATH_PRODUCTOS, 'r', encoding='utf-8') as f1:               
                 
-    except(FileNotFoundError, json.JSONDecodeError):
-        # En dado caso que el archivo ROM no exista o este vacio, lo creamos con la ruta PATH_PRODUCTOS en modo escritura.
-        with open(PATH_PRODUCTOS, 'w', encoding='utf-8') as ex_file:
-            # Creamos un diccionario con los nombres de columnas correctos y sus valores obetenidos desde el parametro entrada
-            # dado por el "Formula de Entradas"
-            entrada_else = {
-                'Clave SAT':entrada['Clave SAT'],
-                'Producto':entrada['Producto'],
-                'Cantidad':entrada['Cantidad'],
-                'Unidad':entrada['Unidad'],
-                'Dimension':entrada['Dimension'],
-                'U. Medida':entrada['U. Medida'],
-                'Precio Compra':entrada['Precio Compra'],
-                'Porcentaje Ganancia':entrada['Porcentaje Ganancia'],
-                'Precio Venta':entrada['Precio Venta'],
-                'Codigo':entrada['Codigo']
-            }
+                # Parseo los datos de json a python.
+                data = json.load(f1)
+                
+                # Creo un DataFrame con los datos de lectura
+                df = pd.DataFrame(data)
+                
+                # Creo un DataFrame con los datos recibidos desde el "Formulario de Entradas"
+                df_entrada = pd.DataFrame(entrada)
+
+                # Lista con codigos existentes en ROM
+                codigos_existentes = set(df['Codigo'])
+                nuevos_codigos = []
+
+                while len(nuevos_codigos) < len(df_entrada):
+                    nuevo_codigo = np.random.randint(10000000, 100000000)
+                    if nuevo_codigo not in codigos_existentes:
+                        nuevos_codigos.append(nuevo_codigo)
+
+                df_entrada['Codigo'] = nuevos_codigos
+
+                # Listo ambos DataFrames en 'frames'
+                frames = [df, df_entrada]
+                
+                # Los concateno
+                df_unido = pd.concat(frames)
+                
+                # Creo una mascara la cual busca duplicados para aquellos que cumplan con el Subset de columnas listadas:
+                df_unido['Mascara'] = df_unido.duplicated(subset=['Producto','Dimension','U. Medida'])
+
+                # Creo un DataFrame sin copias
+                df_correcto = df_unido[df_unido['Mascara'] == False]
+                
+                # Creo un Dataframe con las copias
+                df_incorrecto = df_unido[df_unido['Mascara'] == True]
+
+                # Creo un diccionario con las nuevas entradas.
+                escritura_sin_duplicados = {
+                    'Clave SAT':df_correcto['Clave SAT'].tolist(),
+                    'Producto':df_correcto['Producto'].tolist(),
+                    'Cantidad':df_correcto['Cantidad'].tolist(),
+                    'Unidad':df_correcto['Unidad'].tolist(),
+                    'Dimension':df_correcto['Dimension'].tolist(),
+                    'U. Medida':df_correcto['U. Medida'].tolist(),
+                    'Precio Compra':df_correcto['Precio Compra'].tolist(),
+                    'Porcentaje Ganancia':df_correcto['Porcentaje Ganancia'].tolist(),
+                    'Precio Venta':df_correcto['Precio Venta'].tolist(),
+                    'Codigo':df_correcto['Codigo'].to_list()
+                }
+        
+                # Abro la ruta de la memoria ROM en modo escritura en e_file
+                with open(PATH_PRODUCTOS, 'w', encoding='utf-8') as e_file:   
+                    # Parseo y escribo el diccionario con las nuevas entras y sin repetidos
+                    json.dump(escritura_sin_duplicados, e_file, indent=4, ensure_ascii=False)
+                    # Elimino la columna de mascara para el DataFrame con copias
+                    df_incorrecto = df_incorrecto.drop(['Mascara'], axis=1)
+                    # Si el DataFrame NO esta vacio lo muestro en pantalla con el siguiente mensaje
+                    
+                    if not df_incorrecto.empty:
+                        st.warning('Los Siguientes No Se Guardaron por Ser Duplicados')
+                        st.dataframe(
+                            df_incorrecto,
+                            column_config={
+                                'Precio Compra':st.column_config.NumberColumn(format='dollar', width=50),
+                                'Porcentaje Ganancia':st.column_config.NumberColumn(format='percent', width=50),
+                                'Precio Venta':st.column_config.NumberColumn(format='dollar',width=50)
+                            }
+                            )
+                        st.error('NO HAN SIDO SOBRE-ESCRITOS')
+                        return
+                    
+                    # Si el DataFrame de duplicados si esta vacio, regresa el siguiente mensaje:    
+                    else:
+                        return st.success('DATOS AGREGADOS CON EXITO')
+        else:
+            with open(PATH_PRODUCTOS,'w',encoding='utf-8') as f2:
+                json.dump(entrada,f2,indent=4,ensure_ascii=False)
+                return st.success('EDATOS AGREGADOS CON EXITO')
+            
+    except(FileExistsError,FileNotFoundError,json.JSONDecodeError):
+        # En dado caso de tener problemas encontrando el archivo o con la decodificacion:
+        with open(PATH_PRODUCTOS, 'w', encoding='utf-8') as f3:
             # Parseamos y escribimos en el archivo json
-            json.dump(entrada_else, ex_file, indent=4, ensure_ascii=False)
+            json.dump(entrada, f3, indent=4, ensure_ascii=False)
             # Mandamos el siguiente mensaje:
             return st.success('EDATOS AGREGADOS CON EXITO')
 
@@ -125,7 +120,6 @@ def formulario_entrada_catalogo():
     """En esta seccion se despliega un DataFrame editable. El usuario puede registrar productos
     en la base de datos.
     """
-
     st.subheader('FORMULARIO DE ENTRADAS NUEVAS')
     
     DF_FORMULARIO = pd.DataFrame(
@@ -140,19 +134,18 @@ def formulario_entrada_catalogo():
             'Porcentaje Ganancia':[None],
             'Precio Venta':[None],
             'Codigo':[None]
-        },
-        index=[0,1,2,3,4,5,6,7,8,9]
+        }
     )
     # st.session_state.df_vacio
-    if 'df_formulario' not in st.session_state:
-        st.session_state.df_formulario = DF_FORMULARIO
+    if 'df_form' not in st.session_state:
+        st.session_state.df_form = DF_FORMULARIO
 
     # Aqui declaro las opciones permitidas en la seleccion de unidades para la columna 'Unidad' del DataFrame editable.
     opciones_seleccion_unidad = [
         'Pz (s)',
         'Bolsa (s)',
-        'Paquete (s)',
-        'Ml / Gr (s)'
+        'Caja (s)',
+        'Ml-Gr (s)'
         ]
     
     # Aqui declaro las opciones permitidas en la seleccion de unidades para la columna 'Unidades de Medida' del DataFrame editable.
@@ -172,84 +165,93 @@ def formulario_entrada_catalogo():
 
     # Aqui declaro el DataFrame editable y ajusto sus parametros para cada columna.
     # Ademas que el DataFrame editable que se muestra es el que cargue previamente en la memoria cache (st.session_state['df'])
-    df_editable = st.data_editor(
-        st.session_state.df_formulario,
+    salida = st.data_editor(
+        st.session_state.df_form,
+        num_rows='dynamic',
         hide_index=True,
         key='df_editable',
         column_config={
             'Clave SAT':st.column_config.TextColumn(
-                width=60,
+                width=66,
                 help=':orange[Clave SAT]',
-                required=True,
                 pinned=True
             ),
             'Producto':st.column_config.TextColumn(
-                width=150,
+                width=200,
                 help=':orange[Producto] (Maximo 28 Caracteres)',
                 required=True,
                 pinned=True,
                 max_chars=40
             ),
             'Cantidad':st.column_config.NumberColumn(
-                width=40,
+                width=87,
                 help=':orange[Cantidad]',
                 required=True,
                 min_value=0,
                 step=1,
+                pinned=True
             ),
             'Unidad':st.column_config.SelectboxColumn(
-                width=60,
+                width=77,
                 help=':orange[Unidad]',
                 required=True,
-                options=opciones_seleccion_unidad
+                options=opciones_seleccion_unidad,
+                pinned=True
             ),
             'Dimension':st.column_config.TextColumn(
-                width=50,
+                width=95,
                 help=':orange[Dimension] (Si el producto no tiene dimension ' \
                 ':orange[agregar Sin Dimension])',
-                validate='[0-9]'
+                validate='[0-9]|Sin Dimension',
+                required=True,
+                pinned=True
             ),
             'U. Medida':st.column_config.SelectboxColumn(
-                width=90,
+                width=93,
                 help=':orange[U. Medida] ' \
                 '(Si el producto no tiene U. Medida :orange[agregar "Sin Medida"])',
                 required=True,
-                options=opciones_seleccion_unidad_medida
+                options=opciones_seleccion_unidad_medida,
+                pinned=True
             ),
             'Precio Compra':st.column_config.NumberColumn(
-                width=60,
+                width=99,
                 help=':orange[Precio Compra]',
                 required=True,
-                default=0.00,
                 min_value=0.00,
                 step=0.01,
-                format='dollar'
+                format='dollar',
+                pinned=True
             ),
             'Porcentaje Ganancia':st.column_config.NumberColumn(
-                width=50,
+                width=96,
                 help=':orange[Porcentaje Ganancia]',
                 required=True,
-                default=0.01,
                 min_value=0.01,
                 max_value=1,
                 step=0.01,
-                format='percent'
+                format='percent',
+                pinned=True
             ),
             'Precio Venta':st.column_config.NumberColumn(
-                width=60,
+                width=82,
                 help=':orange[Precio Venta]',
                 format='dollar',
                 required=True,
-                disabled=True
+                disabled=True,
+                pinned=True
             ),
             'Codigo':st.column_config.NumberColumn(
-                width=60,
+                width=70,
                 help=':orange[Codigo De Barras]',
-                disabled=True
+                disabled=True,
+                pinned=True
             )
         }
         )
     
+    df = pd.DataFrame(salida)
+
     column1, column2 = st.columns(2)
 
     # Este boton calcula la columna venta para el formulario que esta llenando el usuario
@@ -262,9 +264,10 @@ def formulario_entrada_catalogo():
         help=':orange[Calcula La columna Precio Venta Con Base En El Porcentaje Dado]'
         )
         if calcular:
-            df_editable['Precio Venta'] = df_editable['Precio Compra'] * (1 + df_editable['Porcentaje Ganancia'])
-            st.session_state.df_formulario = df_editable
-    # Este boton elimina el session_state.df_formulario, o sea lo limpia para comenzar de cero.
+            df['Precio Venta'] = df['Precio Compra'] * (1 + df['Porcentaje Ganancia'])
+            st.session_state.df_form = df
+    
+    # Este boton elimina el session_state.df_form, o sea lo limpia para comenzar de cero.
     with column2:
         reset = st.button(
         label=':material/cleaning_services: __LIMPIAR TABLA__',
@@ -274,7 +277,11 @@ def formulario_entrada_catalogo():
         help=':orange[Limpiar La Tabla Elimina Cualquier Registro]'
         )
         if reset:
-            del st.session_state.df_formulario
+            try:
+                st.session_state.df_form = DF_FORMULARIO
+            except KeyError:
+                if 'df_form' not in st.session_state:
+                    st.session_state.df_form = DF_FORMULARIO
 
     # Aqui se valida la agreacion de producto a la memoria ROM ('catalogo_productos.json')
     agregar_data = st.button(
@@ -285,16 +292,19 @@ def formulario_entrada_catalogo():
         )
     
     if agregar_data:
+
+        df = pd.DataFrame(salida)
         
         # Aqui reinicio el DataFrame guardado en el diccionario cache de Streamlit
-        del st.session_state.df_formulario
+        try:
+            st.session_state.df_form = DF_FORMULARIO
+        except KeyError:
+            if 'df_form' not in st.session_state:
+                st.session_state.df_form = DF_FORMULARIO
         
-        # Aqui calculo el precio de venta por si el usuario no lo hizo previamente
-        df_editable['Precio Venta'] = df_editable['Precio Compra'] * (1 + df_editable['Porcentaje Ganancia'])
-        df_editable['Codigo']=np.random.randint(10000000,100000000)
-        # Aqui elimino las filas que no contengan datos en las columnas listadas (exepto para Clave SAT)
+        # Aqui elimino las filas que no contengan datos en las columnas listadas (exepto para Clave SAT, P. Venta y Codigo)
         # Los productos sin Clave SAT guardan su valor SAT como Null en Json
-        df_editable = df_editable.dropna(
+        df = df.dropna(
             axis=0,
             how='any',
             subset=[
@@ -304,45 +314,53 @@ def formulario_entrada_catalogo():
                 'Dimension',
                 'U. Medida',
                 'Precio Compra',
-                'Porcentaje Ganancia',
-                'Precio Venta',
-                'Codigo'
+                'Porcentaje Ganancia'
                 ]
         )
-
+        
         # Aqui evaluo si al eliminar filas tengo un DataFrame vacio. Y freno el proceso.
-        if df_editable.empty:
+        if df.empty:
             st.warning('Ingrese :red[Valores] en la :red[Tabla]')
             return
         
-        # Si hay datos despues del filtro anterior, continuo con el guardado.
-        else:
+        # Aqui calculo el precio de venta por si el usuario no lo hizo previamente
+        df['Precio Venta'] = df['Precio Compra'] * (1 + df['Porcentaje Ganancia'])
 
-            # Creo una copia del DataFrame
-            df_a_guardar = df_editable.copy()
-            # Aqui ocupo la libreria de numpy para tranformar los datos NaN a None para despues ser pasados a Null
-            df_a_guardar = df_a_guardar.replace({np.nan: None})
-            # Formateamos los numero en la columna Dimension dado que esta contiene strings y no numeros.
-            patron1 = r'\.\d+'
-            patron2 = r'0+\.\d+'
-            df_a_guardar['Dimension'] = df_a_guardar['Dimension'].apply(lambda x: '0'+x if re.fullmatch(patron1,x) else str(float(x)) if re.fullmatch(patron2,x) else x)
-            # Aqui aplico un formato de titulo a la columna producto.
-            df_a_guardar['Producto'] = df_a_guardar['Producto'].apply(lambda x: x.upper().strip())
-            # Creo una columna que contiene Producto Y Modelo
-            df_a_guardar['Entrada'] = df_a_guardar['Producto']+' '+df_a_guardar['Dimension']+' '+df_a_guardar['U. Medida']
-            # Elimino los duplicados para la columna Producto Y Modelo
-            df_a_guardar = df_a_guardar.drop_duplicates(subset=['Entrada','Codigo'])
-            # Elimino la columna Producto Y Modelo
-            df_a_guardar = df_a_guardar.drop(columns=['Entrada'])
-            
-            # Creo un diccionario con toda la informacion, las llaves son los nombre de columna y los datos son listas (tolist())
-            dict_cache = df_a_guardar.to_dict(orient='list')
-            # Ocupo la funcion, que agrega a la memoria ROM 'catalogo_productos.json'
-            entrada_al_catalogo(dict_cache)
+        # Genero Codigos y limpio hasta estar seguro que no hay codigos duplicados
+        codigos_generados = set()
+        nuevos_codigos = []
 
-            # Muestro un link para volver a inicio y finalizo la funcion.
-            st.page_link(label=':material/arrow_back: Volver A Inicio', page='inicio.py', use_container_width=True)
-            st.stop() 
+        while len(nuevos_codigos) < len(df):
+            nuevo_codigo = np.random.randint(10000000, 100000000)
+            if nuevo_codigo not in codigos_generados:
+                codigos_generados.add(nuevo_codigo)
+                nuevos_codigos.append(nuevo_codigo)
+
+        df['Codigo'] = nuevos_codigos
+
+        # Aqui ocupo la libreria de numpy para tranformar los datos NaN a None para despues ser pasados a Null
+        df = df.replace({np.nan: None})
+        # Formateamos los numero en la columna Dimension dado que esta contiene strings y no numeros.
+        patron1 = r'\.\d+'
+        patron2 = r'0+\.\d+'
+        df['Dimension'] = df['Dimension'].apply(lambda x: '0'+x if re.fullmatch(patron1,x) else str(float(x)) if re.fullmatch(patron2,x) else x)
+        # Aqui aplico un formato de titulo a la columna producto.
+        df['Producto'] = df['Producto'].apply(lambda x: x.upper().strip())
+        # Creo una columna que contiene Producto Y Modelo
+        df['Entrada'] = df['Producto']+' '+df['Dimension']+' '+df['U. Medida']
+        # Elimino los duplicados para la columna Producto Y Modelo
+        df = df.drop_duplicates(subset=['Entrada'])
+        # Elimino la columna Producto Y Modelo
+        df = df.drop(columns=['Entrada'],axis=1)
+        
+        # Creo un diccionario con toda la informacion, las llaves son los nombre de columna y los datos son listas (tolist())
+        dict_cache = df.to_dict(orient='list')
+        # Ocupo la funcion, que agrega a la memoria ROM 'catalogo_productos.json'
+        entrada_al_catalogo(dict_cache)
+
+        # Muestro un link para volver a inicio y finalizo la funcion.
+        st.page_link(label=':material/arrow_back: Volver A Inicio', page='inicio.py', use_container_width=True)
+        st.stop()
 
 def ver_inventario_completo():
     # Probamos la existencia y el tamabho del archivo en la ruta 'catalogo_productos.json'
