@@ -17,8 +17,7 @@ try:
     # Leo los datos de Productos, redondeo el precio de venta, creo la columna Producto Y Modelo
     # la asigno como el indice del DataFrame
     with open(RUTA_PRODUCTOS, 'r', encoding='utf-8') as file:
-        datos = json.load(file)
-        df = pd.DataFrame(data=datos)
+        df = pd.DataFrame(data=json.load(file))
         df['Precio Venta'] = round(df['Precio Venta'])
         df['Precio Unitario'] = df['Precio Venta']
         df['Precio Unitario'] = df['Precio Unitario'].astype('str')
@@ -59,8 +58,8 @@ try:
             column_order=['Unidades', 'Producto Y Modelo','Precio U.' ,'Total','Existencias'],
             hide_index=True,
             column_config={
-                'Unidades':st.column_config.NumberColumn(disabled=False,width=50,help=':orange[Unidades]',step=1),
-                'Producto Y Modelo':st.column_config.SelectboxColumn(options=OPCIONES,width=400,help=':orange[Producto Y Modelo]'),
+                'Unidades':st.column_config.NumberColumn(disabled=False,width=75,help=':orange[Unidades]',step=1),
+                'Producto Y Modelo':st.column_config.SelectboxColumn(options=OPCIONES,width=350,help=':orange[Producto Y Modelo]'),
                 'Precio U.':st.column_config.NumberColumn(format='dollar', disabled=True, width=50, help=':orange[Precio Unitario]'),
                 'Total':st.column_config.NumberColumn(disabled=True,width=50, format='dollar',help=':orange[Total]'),
                 'Existencias':st.column_config.TextColumn(disabled=True, width=60,help=':orange[Existencias]')

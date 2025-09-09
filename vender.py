@@ -109,7 +109,7 @@ def formulario_venta(folio:int, data:dict):
         num_rows='dynamic',
         column_config={
             'Cantidad':st.column_config.NumberColumn(
-                width=60,
+                width=90,
                 help=':orange[Cantidad]',
                 required=True,
                 pinned=True,
@@ -117,7 +117,7 @@ def formulario_venta(folio:int, data:dict):
                 step=1
             ),
             'Producto Y Modelo':st.column_config.SelectboxColumn(
-                width=210,
+                width=180,
                 help=':orange[Producto Y Modelo]',
                 required=True,
                 pinned=True,
@@ -150,7 +150,7 @@ def formulario_venta(folio:int, data:dict):
                 format='dollar'
             ),
             'Existencias':st.column_config.NumberColumn(
-                width=70,
+                width=75,
                 help=':orange[Existencias]',
                 disabled=True,
                 pinned=True,

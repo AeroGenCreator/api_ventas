@@ -4,6 +4,8 @@ manejan en este archivo"""
 import os
 import json
 import re
+import io
+import zipfile
 
 #Modulos Propios
 import lenguaje
@@ -19,6 +21,17 @@ from PIL import Image, ImageDraw, ImageFont
 
 # Direccion json para el guardado de productos.
 PATH_PRODUCTOS = 'catalogo_productos.json'
+
+def lectura_del_inventario():
+    try:
+        if os.path.exists(PATH_PRODUCTOS) and os.path.getsize(PATH_PRODUCTOS)>0:
+            with open(PATH_PRODUCTOS,'r',encoding='utf-8') as f:
+                DataFrame = pd.DataFrame(json.load(f))
+                return DataFrame
+        else:
+            return st.warning('No hay productos en el :orange[Inventario]')
+    except (FileExistsError, json.JSONDecodeError):
+        return st.error('Erro al acceder al :orange[Inventario] o al decodificarlo.')
 
 def entrada_al_catalogo(entrada:dict):
     """Esta funcion agregar entradas nuevas de inventario 
@@ -391,9 +404,9 @@ def ver_inventario_completo():
                     hide_index=True,
                     column_config={
                         'Producto Y Modelo':st.column_config.TextColumn(width=210),
-                        'Precio Compra': st.column_config.NumberColumn(format='dollar', width=60),
-                        'Porcentaje Ganancia': st.column_config.NumberColumn(format='percent', width=60),
-                        'Precio Venta': st.column_config.NumberColumn(format='dollar', width=60),
+                        'Precio Compra': st.column_config.NumberColumn(format='dollar', width=100),
+                        'Porcentaje Ganancia': st.column_config.NumberColumn(format='percent', width=135),
+                        'Precio Venta': st.column_config.NumberColumn(format='dollar', width=100),
                     }
                 )
         # Si no hay registros en el inventario se muestra el sig. mensaje:        
@@ -514,7 +527,7 @@ def ajustar_inventario():
                     # Producto, Dimension, U. Medida
                     df_ajuste = df[df['Producto Y Modelo'].isin(filtro_ajuste)].copy()
                     df_mostrar = df_ajuste[['Clave SAT','Producto Y Modelo','Cantidad','Porcentaje Ganancia','Precio Venta']]
-                    df_mostrar['Cantidad']=0
+                    
                     #Creo el DataFrame editable con sus parametros de edicion
                     df_ajustado = st.data_editor(
                         df_mostrar,
@@ -642,6 +655,65 @@ def eliminar_entradas():
     except(FileNotFoundError,json.JSONDecodeError,TypeError):
         st.warning('No Hay Productos en el :orange[Inventario]')
 
+def ajustar_por_codigo():
+    
+    df = lectura_del_inventario()
+    
+    try:
+        
+        df.set_index('Codigo',inplace=True)
+        
+        copy = df.copy()
+        copy['Producto Y Modelo'] = df['Producto']+' '+df['Dimension']+' '+df['U. Medida']
+        copy['Cantidad'] = 0
+
+        OPCIONES = df.index.tolist()
+        
+        escaner = st.multiselect(
+            label='Escanea Los Codigos Deseados',
+            options=OPCIONES
+        )
+        
+        if escaner:
+            salida = st.data_editor(
+                data=copy[copy.index.isin(escaner)],
+                column_order=['Producto Y Modelo','Cantidad'],
+                column_config={
+                    '_index':st.column_config.NumberColumn(disabled=True),
+                    'Producto Y Modelo':st.column_config.TextColumn(disabled=True)
+                }
+            )
+
+            guardar = st.button(
+                label='Guardar Cambios',
+                type='primary',
+                key='guardar_cambios'
+            )
+
+            if guardar:
+                salida.reset_index(inplace=True)
+                df.loc[df.index.isin(salida['Codigo']),'Cantidad'] = salida['Cantidad'].values
+                df.reset_index(inplace=True)
+                df = df[[
+                    'Clave SAT',
+                    'Producto',
+                    'Cantidad',
+                    'Unidad',
+                    'Dimension',
+                    'U. Medida',
+                    'Precio Compra',
+                    'Porcentaje Ganancia',
+                    'Precio Venta',
+                    'Codigo'
+                ]]
+                datos = df.to_dict(orient='list')
+                with open(PATH_PRODUCTOS,'w',encoding='utf-8')as e:
+                    json.dump(datos,e,indent=4,ensure_ascii=False)
+                st.success('Datos Ajustados Correctamente')
+                st.stop()
+    except st.errors.StreamlitAPIException:
+        st.write('')
+
 def crear_etiquetas_codigo():
     """" Es codigo genera codigos de barras y sus etiquetas para ser descargados"""
     try:
@@ -654,6 +726,7 @@ def crear_etiquetas_codigo():
             df['Producto Y Modelo'] = df['Producto']+' '+df['Dimension']+' '+df['U. Medida']
             df['Codigo'] = df['Codigo'].astype('str')
 
+            st.info('Si deseas todas las etiquetas no ingreses valores en la "Barra De Busqueda".')
             # Opcion de filtro y crear etiquetas para la interfaz de usuario:
             seleccion_especifica = st.multiselect(
                 label='Selecciona Las Etiquetas Deseadas',
@@ -669,13 +742,10 @@ def crear_etiquetas_codigo():
 
             # Creacion de etiquetas
             if crear_etiquetas:
+                
                 # Aqui modifico las etiquetas que seran impresas si True, entonces filtro:
                 if seleccion_especifica:
                     df = df[df['Producto Y Modelo'].isin(seleccion_especifica)]
-                
-                # Creo el directorio en el que se guardaran las etiquetas:
-                output_dir = 'codigos_productos'
-                os.makedirs(output_dir, exist_ok=True)
 
                 # Para el manejo de imagenes, establesco los parametros de 'fuente'
                 try:
@@ -683,36 +753,61 @@ def crear_etiquetas_codigo():
                 except IOError:
                     font_path_nombre = ImageFont.load_default()
                 
-                # Itero sobre todos los productos 'DataFrame' o los productos 'seleccionados':
-                for index,row in df.iterrows():
-                    # Aqui genero el codigo de barras como imagen y edito sus parametros: 
-                    code_128 = Code128(row['Codigo'], writer=ImageWriter())
-                    barcode_img = code_128.render(writer_options={'module_height':9,'text_distance':3,'font_size':7})
+                # Crear un buffer de bytes para el archivo ZIP
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    # Itero sobre todos los productos 'DataFrame' o los productos 'seleccionados':
+                    for index,row in df.iterrows():
+                        
+                        # Aqui genero el codigo de barras como imagen y edito sus parametros: 
+                        code_128 = Code128(row['Codigo'], writer=ImageWriter())
+                        barcode_img = code_128.render(writer_options={'module_height':9,'text_distance':3,'font_size':7})
 
-                    # Aqui establezco el tamanho de las etiquetas finales:
-                    LABEL_WIDTH=650
-                    LABEL_HEIGHT=210
+                        # Aqui establezco el tamanho de las etiquetas finales:
+                        LABEL_WIDTH=650
+                        LABEL_HEIGHT=210
 
-                    etiqueta_img = Image.new('RGB',(LABEL_WIDTH,LABEL_HEIGHT),'white')
-                    draw = ImageDraw.Draw(etiqueta_img)
+                        # Creo la imagen y su fondo, creo la clase de dibujo (edicion)
+                        etiqueta_img = Image.new('RGB',(LABEL_WIDTH,LABEL_HEIGHT),'white')
+                        draw = ImageDraw.Draw(etiqueta_img)
 
-                    barcode_width, barcode_height = barcode_img.size
+                        # Obtengo el tamanho de la imagen y calculo la posicicion para el codigo de barras.
+                        barcode_width, barcode_height = barcode_img.size
+                        barcode_x =  (LABEL_WIDTH - barcode_width) // 2
+                        barcode_y = ((LABEL_HEIGHT - barcode_height) // 2) + 15
 
-                    barcode_x =  (LABEL_WIDTH - barcode_width) // 2
-                    barcode_y = ((LABEL_HEIGHT - barcode_height) // 2) + 15
+                        # Pego el codigo de barras en la imagen:
+                        etiqueta_img.paste(barcode_img,(barcode_x,barcode_y))
 
-                    etiqueta_img.paste(barcode_img,(barcode_x,barcode_y))
+                        # Obtengo el tamanho del Nombre del Producto, calculo su posicicion en la etiqeuta, dibujo el nombre:
+                        box_size = draw.textbbox((0,0),row['Producto Y Modelo'],font=font_path_nombre)
+                        p_x = box_size[2] - box_size[0]
+                        p_y = box_size[3] - box_size[1]
+                        x_producto = (LABEL_WIDTH - p_x) // 2
+                        y_producto = ((LABEL_HEIGHT - p_y) // 2) - 80
+                        draw.text((x_producto,y_producto ), row['Producto Y Modelo'], font=font_path_nombre, fill='black')
 
-                    box_size = draw.textbbox((0,0),row['Producto Y Modelo'],font=font_path_nombre)
-                    p_x = box_size[2] - box_size[0]
-                    p_y = box_size[3] - box_size[1]
-                    x_producto = (LABEL_WIDTH - p_x) // 2
-                    y_producto = ((LABEL_HEIGHT - p_y) // 2) - 80
-                    draw.text((x_producto,y_producto ), row['Producto Y Modelo'], font=font_path_nombre, fill='black')
+                        img_buffer=io.BytesIO()
+                        etiqueta_img.save(img_buffer,format='PNG')
+                        img_buffer.seek(0)
 
-                    output_filename = os.path.join(output_dir, f"etiqueta_{row['Codigo']}.png")
-                    etiqueta_img.save(output_filename)
+                        nombre_limpio = row['Producto Y Modelo'].replace('/','_').replace('(','').replace(')','')
+                        file_name = f'etiquetas_{nombre_limpio}.png'
+                        zip_file.writestr(file_name, img_buffer.getvalue())
 
+                st.success('¡Etiquetas generadas! Haz clic en el botón para descargar.')
+
+                zip_buffer.seek(0)
+
+                st.download_button(
+                    label='Descargar Etiquetas (ZIP)',
+                    data=zip_buffer.getvalue(),
+                    file_name='etiquetas_productos.zip',
+                    mime='application/zip'
+                )
+                        
+
+    # Aqui manejo inventario vacio o error de lectura:
         else:
             st.warning('No Hay Productos En El :orange[Inventario]')
     except(json.JSONDecodeError):
@@ -757,7 +852,7 @@ if seleccion_inventario_opciones == ':material/delete: Eliminar Producto':
     eliminar_entradas()
 
 if seleccion_inventario_opciones == ':material/barcode_scanner: Ajustar Producto Con Scaner':
-    st.write('En Construccion')
+    ajustar_por_codigo()
 
 if seleccion_inventario_opciones == ':material/label: Imprimir Etiquetas de Codigo':
     crear_etiquetas_codigo()
