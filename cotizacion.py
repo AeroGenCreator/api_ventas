@@ -77,11 +77,11 @@ try:
         # Creo los botones calculo, limpiar tabla, e imprimir
         col1, col2, col3 = st.columns(3)
         with col1:
-            calcular_total = st.button('Calcular Total',width=200)
+            calcular_total = st.button('Calcular Total',width='stretch')
         with col2:
-            limpiar_tabla = st.button('Limpiar - Cargar Cache',width=200)
+            limpiar_tabla = st.button('Limpiar - Cargar Cache',width='stretch')
         with col3:
-            imprimir = st.button('Imprimir', type='secondary', width=200)
+            imprimir = st.button('Imprimir', type='primary', width='stretch')
 
         # Limpio el cache de streamlit para la situacion de limpiar una tabla.
         if edicion.empty:
@@ -195,10 +195,10 @@ try:
             pdf.set_text_color(0,51,0)
 
             # Creo los nombre de las columnas, las cuales iran por encima de los datos de tabla
-            pdf.cell(16,6,txt='Uni.',border=True,align='C') 
-            pdf.cell(122,6,txt='Producto Y Modelo',border=True,align='C') 
-            pdf.cell(29,6,txt='Precio U.',border=True,align='R') 
-            pdf.cell(29,6,txt='Total', ln=True,border=True,align='R')
+            pdf.cell(16,6,txt='UNI.',border=True,align='C') 
+            pdf.cell(122,6,txt='PRODUCTO Y MODELO',border=True,align='C') 
+            pdf.cell(29,6,txt='PRECIO U.',border=True,align='R') 
+            pdf.cell(29,6,txt='TOTAL', ln=True,border=True,align='R')
             
             # Creo una linea muerta como separador
             pdf.cell(0,6,fill=True,ln=True)

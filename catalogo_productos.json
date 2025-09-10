@@ -1,42 +1,72 @@
 {
     "Clave SAT": [
         null,
+        null,
+        null,
+        null,
         null
     ],
     "Producto": [
         "TUBO COBRE",
-        "TUBO COBRE"
+        "TUBO COBRE",
+        "AZULEJO PIEDRA ROCOCO VALENCIA ESP. ROJO",
+        "AZULEJO LADRILLO PINHON AZUL ESP. ROMBOS MONACO P.",
+        "SHAMPOO LAVANDA K-LEN.R"
     ],
     "Cantidad": [
-        30,
-        20
+        10,
+        20,
+        20,
+        10,
+        10
     ],
     "Unidad": [
         "Pz (s)",
+        "Pz (s)",
+        "Caja (s)",
+        "Caja (s)",
         "Pz (s)"
     ],
     "Dimension": [
         "1/2",
-        "1/4"
+        "1/4",
+        "15",
+        "15",
+        "0.08"
     ],
     "U. Medida": [
         "Pulgada (s)",
-        "Pulgada (s)"
+        "Pulgada (s)",
+        "Pz (s)",
+        "Pz (s)",
+        "Kg (s)"
     ],
     "Precio Compra": [
         108.5,
-        90.0
+        90.0,
+        150.0,
+        200.0,
+        30.0
     ],
     "Porcentaje Ganancia": [
         0.4,
-        0.3
+        0.3,
+        0.2,
+        0.2,
+        0.5
     ],
     "Precio Venta": [
         151.9,
-        117.0
+        117.0,
+        180.0,
+        240.0,
+        45.0
     ],
     "Codigo": [
         55383062,
-        26327309
+        26327309,
+        26485821,
+        87610931,
+        89769314
     ]
 }

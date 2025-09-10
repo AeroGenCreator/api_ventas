@@ -156,7 +156,7 @@ def formulario_entrada_catalogo():
         ]
 
     st.info(':material/lightbulb: Todas las columnas requieren un valor distinto de :red[None].\n' \
-    'Excepto Para :green[Clave SAT, Precio Venta y Codigo]. El resto de :red[Campos] son obligatorios,' \
+    'Excepto Para :green[Clave SAT, Precio Venta y Codigo]. El resto de :red[Campos] son obligatorios, ' \
     'de lo contrario dicha fila no se guarda.\n ' \
     'Si un producto no cuenta con clave SAT el valor :green[None] es permitido :material/lightbulb:')
 
@@ -177,7 +177,7 @@ def formulario_entrada_catalogo():
                 help=':orange[Producto] (Maximo 40 Caracteres)',
                 required=True,
                 pinned=True,
-                max_chars=40
+                max_chars=50
             ),
             'Cantidad':st.column_config.NumberColumn(
                 width=87,
@@ -665,8 +665,8 @@ def ajustar_por_codigo():
         
         copy = df.copy()
         copy['Producto Y Modelo'] = df['Producto']+' '+df['Dimension']+' '+df['U. Medida']
-        copy['Cantidad'] = 0
-
+        copy['Cantidad Actual'] = df['Cantidad']
+        copy['Nueva Cantidad'] = 0
         OPCIONES = df.index.tolist()
         
         escaner = st.multiselect(
@@ -677,10 +677,11 @@ def ajustar_por_codigo():
         if escaner:
             salida = st.data_editor(
                 data=copy[copy.index.isin(escaner)],
-                column_order=['Producto Y Modelo','Cantidad'],
+                column_order=['Producto Y Modelo','Cantidad Actual','Nueva Cantidad'],
                 column_config={
                     '_index':st.column_config.NumberColumn(disabled=True),
-                    'Producto Y Modelo':st.column_config.TextColumn(disabled=True)
+                    'Producto Y Modelo':st.column_config.TextColumn(disabled=True),
+                    'Cantidad Actual':st.column_config.NumberColumn(disabled=True)
                 }
             )
 
@@ -692,7 +693,7 @@ def ajustar_por_codigo():
 
             if guardar:
                 salida.reset_index(inplace=True)
-                df.loc[df.index.isin(salida['Codigo']),'Cantidad'] = salida['Cantidad'].values
+                df.loc[df.index.isin(salida['Codigo']),'Cantidad'] = salida['Nueva Cantidad'].values
                 df.reset_index(inplace=True)
                 df = df[[
                     'Clave SAT',
