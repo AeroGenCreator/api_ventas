@@ -1,0 +1,17 @@
+{
+  "name": "streamlit_scanner_component",
+  "version": "0.1.0",
+  "description": "A Streamlit component for barcode scanning.",
+  "main": "main.js",
+  "scripts": {
+    "build": "esbuild main.js --bundle --outfile=build.js --loader:.js=jsx"
+  },
+  "author": "Andres",
+  "license": "ISC",
+  "dependencies": {
+    "streamlit-component-lib": "^2.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.9"
+  }
+}
