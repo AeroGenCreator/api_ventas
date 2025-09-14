@@ -27,3 +27,14 @@ guardar_cambios = st.button(
 
 if guardar_cambios:
     st.rerun()
+
+# Esto se eliminara despues
+import streamlit as st
+from streamlit_scanner_component import scanner_component
+
+st.title('Prueba')
+
+texto_escaneado = scanner_component()
+
+st.write(texto_escaneado)
+
