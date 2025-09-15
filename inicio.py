@@ -4,4 +4,4 @@ import streamlit as st
 
 l = lenguaje.tu_idioma()
 st.title(l.phrase[0])
-
+st.image('providencia_logo.jpeg',width=100,caption='Bienvenido')

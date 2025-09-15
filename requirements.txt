@@ -5,4 +5,5 @@ streamlit-authenticator
 streamlit-tags
 fpdf2
 Pillow
-python-barcode 
+python-barcode
+python-escpos

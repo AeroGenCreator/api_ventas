@@ -429,7 +429,7 @@ def ajustar_inventario():
                             '_index':st.column_config.NumberColumn(disabled=True),
                             'Producto':st.column_config.TextColumn(disabled=True,width=252,pinned=True),
                             'Cantidad':st.column_config.NumberColumn(pinned=True,width=150),
-                            'Precio Compra':st.column_config.NumberColumn(format='dollar',pinned=True, width=150),
+                            'Precio Compra':st.column_config.NumberColumn(format='dollar',pinned=True, width=150,min_value=0.01),
                             'Precio Lista':st.column_config.NumberColumn(format='dollar',pinned=True, width=150)
                         }
                         )

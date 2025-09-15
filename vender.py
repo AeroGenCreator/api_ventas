@@ -6,13 +6,16 @@ import lenguaje
 
 import streamlit as st
 import pandas as pd
+from escpos.printer import Usb
 
 l=lenguaje.tu_idioma()
 
-st.title(f':material/sell: {l.phrase[1]}')
+st.header(f':material/sell: {l.phrase[1]}')
+
+DIRECCION = 'Santa Ana Chiautempan, Tlaxcala C.P. 90800'
 
 RUTA_HISTORIAL = 'ventas_historial.json'
-RUTA_PRODUCTOS = 'catalogo_productos.json'
+RUTA_PRODUCTOS = '_inventario_providencia.json'
 
 SALES_EMPTY_DICT = {
     'Folio':[],
@@ -68,21 +71,25 @@ def acceso_a_productos():
 def formulario_venta(folio:int, data:dict):
 
     df=pd.DataFrame(data=data)
-    df['Producto Y Modelo']=df['Producto']+df['Dimension']+df['U. Medida']
-    df['Precio Venta']=round(df['Precio Venta'])
-    df=df.set_index(keys='Producto Y Modelo',drop=True)
+    copia1 = df.copy()
+    copia1['Precio Lista']=round(copia1['Precio Lista'])
+    copia2 = df.copy()
+    
+    df.set_index(keys='Producto',inplace=True)
+    copia1.set_index(keys='Producto',inplace=True)
+    copia2.set_index(keys='Producto',inplace=True)
 
-    OPCIONES = df.index.to_list()
+    OPCIONES = copia1.index.to_list()
 
     DF_VACIO = pd.DataFrame({
-        'Cantidad':[None],
-        'Producto Y Modelo':[None],
-        'Unidad':[None],
-        'Clave SAT':[None],
+        'Piezas':[None],
+        'Producto':[None],
+        'C 1':[None],
+        'C 2':[None],
+        'U. Medida':[None],
         'Precio':[None],
         'Total':[None],
-        'Existencias':[None],
-        'Faltas':[None]
+        'Existencias':[None]
     })
 
     TOTAL_PRODUCTOS = 0
@@ -95,69 +102,69 @@ def formulario_venta(folio:int, data:dict):
     if 'total_costo' not in st.session_state:
         st.session_state.total_costo = TOTAL_COSTO
 
-    hoy = datetime.date.today()
+    HOY = datetime.date.today()
 
-    st.write('Ignacio Picazo Sur No. 30 Santa Ana Chiautempan, Tlaxcala C.P. 90800')
+    st.write(DIRECCION)
 
     col_1, col_2, col_3 = st.columns(3)
     col_1.write('__NOTA DE VENTA__')
     col_2.write(f'__No. Folio: :red[{folio}]__')
-    col_3.write(hoy)
+    col_3.write(HOY)
 
     df_venta = st.data_editor(
         data=st.session_state.df,
         num_rows='dynamic',
         column_config={
-            'Cantidad':st.column_config.NumberColumn(
-                width=90,
-                help=':orange[Cantidad]',
+            'Piezas':st.column_config.NumberColumn(
+                width=75,
+                help=':orange[Piezas]',
                 required=True,
                 pinned=True,
                 min_value=1,
                 step=1
             ),
-            'Producto Y Modelo':st.column_config.SelectboxColumn(
+            'Producto':st.column_config.SelectboxColumn(
                 width=180,
-                help=':orange[Producto Y Modelo]',
+                help=':orange[Producto]',
                 required=True,
                 pinned=True,
                 options=OPCIONES,
                 ),
-            'Unidad':st.column_config.TextColumn(
+            'C 1':st.column_config.TextColumn(
                 width=60,
+                help=':orange[Categoría 1]',
+                disabled=True,
+                pinned=True,
+            ),
+            'C 2':st.column_config.TextColumn(
+                width=75,
+                help=':orange[Categoría 2]',
+                disabled=True,
+                pinned=True
+            ),
+            'U. Medida':st.column_config.TextColumn(
+                width=70,
                 help=':orange[Unidad]',
                 disabled=True,
                 pinned=True,
             ),
-            'Clave SAT':st.column_config.TextColumn(
-                width=80,
-                help=':orange[Clave SAT]',
-                disabled=True,
-                pinned=True
-            ),
             'Precio':st.column_config.NumberColumn(
-                width=70,
+                width=80,
                 help=':orange[Precio]',
-                disabled=True,
-                pinned=True,
-                format='dollar',
-            ),
-            'Total':st.column_config.NumberColumn(
-                width=70,
-                help=':orange[Total]',
                 disabled=True,
                 pinned=True,
                 format='dollar'
             ),
-            'Existencias':st.column_config.NumberColumn(
-                width=75,
-                help=':orange[Existencias]',
+            'Total':st.column_config.NumberColumn(
+                width=80,
+                help=':orange[Total]',
+                format='dollar',
                 disabled=True,
                 pinned=True,
             ),
-            'Faltas':st.column_config.TextColumn(
-                width=50,
-                help=':orange[Faltas]',
+            'Existencias':st.column_config.NumberColumn(
+                width=60,
+                help=':orange[Existencias]',
                 disabled=True,
                 pinned=True,
             )
@@ -167,21 +174,29 @@ def formulario_venta(folio:int, data:dict):
     df_venta = pd.DataFrame(data=df_venta)
 
     if df_venta.empty:
-        st.session_state.df=DF_VACIO
-        st.session_state.total_productos=TOTAL_PRODUCTOS
-        st.session_state.total_costo=TOTAL_COSTO
+        try:
+            st.session_state.df=DF_VACIO
+            st.session_state.total_productos=TOTAL_PRODUCTOS
+            st.session_state.total_costo=TOTAL_COSTO
+        except KeyError:
+            if 'df' not in st.session_state:
+                st.session_state.df =DF_VACIO
+            if 'total_productos' not in st.session_state:
+                st.session_state.total_productos=TOTAL_PRODUCTOS
+            if 'total_costo' not in st.session_state:
+                st.session_state.total_costo=TOTAL_COSTO
 
     col_4, col_5 = st.columns(2)
     col_4.metric(
         label='Total De Productos',
-        value=TOTAL_PRODUCTOS,
+        value=st.session_state.total_productos,
         help=':orange[Este Calculo Se Realiza Automatico Despues De Calcular Totales]',
         border=True,
-        height='stretch'
+        height='stretch',
         )
     col_5.metric(
         'Total De Costo',
-        value=TOTAL_COSTO,
+        value=st.session_state.total_costo,
         help=':orange[Este Calculo Se Realiza Automatico Despues De Calcular Totales]',
         border=True,
         height='stretch'
@@ -213,11 +228,61 @@ def formulario_venta(folio:int, data:dict):
             width='stretch'
         )
 
-    if calculo:
-        df_venta=df_venta.dropna(axis=0,how='any',subset=['Cantidad','Producto Y Modelo'])
-        df_venta=df_venta.drop_duplicates(subset=['Producto Y Modelo'],keep='first',ignore_index=True)
-        st.session_state.df=df_venta
+    if calculo or registar_venta:
 
+        df_venta=df_venta.dropna(axis=0,how='any',subset=['Piezas','Producto'])
+        df_venta=df_venta.drop_duplicates(subset=['Producto'],keep='first',ignore_index=True)
+
+        copia1 = copia1.loc[df_venta['Producto'],:]
+
+        df_union = df_venta.merge(copia1,how='left', on='Producto')
+
+        df_union['C 1'] = df_union['Categoría 1']
+        df_union['C 2'] = df_union['Categoría 2']
+        df_union['U. Medida'] = df_union['Unidad']
+        df_union['Precio'] = df_union['Precio Lista']
+        df_union['Total'] = df_union['Piezas'] * df_union['Precio Lista']
+        df_union['Existencias'] = df_union['Cantidad']
+
+        df_union = df_union[[
+            'Piezas',
+            'Producto',
+            'C 1',
+            'C 2',
+            'U. Medida',
+            'Precio',
+            'Total',
+            'Existencias'
+        ]]
+
+        st.session_state.df=df_union
+        st.session_state.total_productos = df_union['Piezas'].sum()
+        st.session_state.total_costo = df_union['Total'].sum()
+
+        if registar_venta:
+            
+            df_final = st.session_state.df
+            df_final = df_final[~(df_final['Existencias'] == 0)]
+            
+            copia2 = copia2.loc[df_final['Producto'],:]
+            
+            resta = df_final.merge(copia2,how='left',on='Producto')
+            resta['Cantidad'] = resta['Cantidad'] - resta['Piezas']
+            resta = resta[[
+                'Codigo',
+                'Producto',
+                'Cantidad',
+                'Categoría 1',
+                'Categoría 2',
+                'Unidad',
+                'Precio Compra',
+                'Porcentaje Ganancia',
+                'Precio Lista',
+                'Clave',
+                'Oficial'
+                ]]
+            st.dataframe(resta,hide_index=True)
+    
     if limpiar_tabla:
         try:
             st.session_state.df=DF_VACIO
@@ -232,10 +297,9 @@ def formulario_venta(folio:int, data:dict):
                 st.session_state.total_costo = TOTAL_COSTO
 
 
-# LLAMADO A LAS FUNCIONES ----------------------------------------------------------------------
+# LLAMADO A LAS FUNCIONES -----------------------------------------------------------------------------------------------------------
 
 historial = acceso_a_historial()
 folio = get_folio(historial)
 productos = acceso_a_productos()
 formulario_venta(folio=folio,data=productos)
-st.dataframe(historial)
