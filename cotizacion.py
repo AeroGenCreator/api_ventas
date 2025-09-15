@@ -149,7 +149,7 @@ def cotizacion_funcion():
                     def header(self):
                         self.set_text_color(0,0,0)
                         self.set_font(family='ArialUnicodeMS',size=20)
-                        self.image('providencia_logo.jpeg', 10, 8, 16)
+                        self.image('pro.jpg', 10, 8, 16)
                         self.cell(20,6,txt='Cotizacion', border=False,center=True,ln=True,align='C')
                         self.ln(15)
                     def footer(self):

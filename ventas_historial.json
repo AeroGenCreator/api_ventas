@@ -1,10 +1,54 @@
 {
-    "Folio": [],
-    "Fecha": [],
-    "Clave SAT": [],
-    "Producto Y Modelo": [],
-    "Cantidad": [],
-    "Unidad": [],
-    "Precio": [],
-    "Total": []
+    "Folio": [
+        1,
+        2
+    ],
+    "Fecha": [
+        "2025-09-15",
+        "2025-09-15"
+    ],
+    "Codigo": [
+        9236,
+        9236
+    ],
+    "Producto": [
+        "A.A.A PILAS",
+        "A.A.A PILAS"
+    ],
+    "Cantidad": [
+        3,
+        5
+    ],
+    "Categoría 1": [
+        "ENERGIZER",
+        "ENERGIZER"
+    ],
+    "Categoría 2": [
+        "SIN CATEGORIA",
+        "SIN CATEGORIA"
+    ],
+    "Unidad": [
+        "Pieza",
+        "Pieza"
+    ],
+    "Precio Compra": [
+        50,
+        50
+    ],
+    "Porcentaje Ganancia": [
+        0.5,
+        0.5
+    ],
+    "Precio Lista": [
+        75.0,
+        75.0
+    ],
+    "Clave": [
+        "APC102",
+        "APC102"
+    ],
+    "Oficial": [
+        true,
+        true
+    ]
 }

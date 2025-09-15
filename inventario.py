@@ -725,7 +725,7 @@ seleccion_inventario_opciones = st.pills(
     label='',
     options=[
         f':material/inventory_2: {l.phrase[2]}',
-        ':material/docs_add_on: Agregar Nuevo',
+        ':material/docs_add_on: Agregar Nuevo Registro',
         ':material/table_edit: Ajuste Simple',
         ':material/delete: Eliminar Producto',
         ':material/barcode_scanner: Ajustar Producto Con Scaner',
@@ -738,7 +738,7 @@ seleccion_inventario_opciones = st.pills(
 if seleccion_inventario_opciones == f':material/inventory_2: {l.phrase[2]}':
     ver_inventario_completo()    
     
-if seleccion_inventario_opciones == ':material/docs_add_on: Agregar Nuevo':
+if seleccion_inventario_opciones == ':material/docs_add_on: Agregar Nuevo Registro':
     formulario_entrada_catalogo()
 
 if seleccion_inventario_opciones == ':material/table_edit: Ajuste Simple':

@@ -17,17 +17,6 @@ DIRECCION = 'Santa Ana Chiautempan, Tlaxcala C.P. 90800'
 RUTA_HISTORIAL = 'ventas_historial.json'
 RUTA_PRODUCTOS = '_inventario_providencia.json'
 
-SALES_EMPTY_DICT = {
-    'Folio':[],
-    'Fecha':[],
-    'Clave SAT':[],
-    'Producto Y Modelo':[],
-    'Cantidad':[],
-    'Unidad':[],
-    'Precio':[],
-    'Total':[]
-    }
-
 CODIGO_QR = 'Cero'
 
 def acceso_a_historial():
@@ -37,24 +26,25 @@ def acceso_a_historial():
                 data = json.load(f)
                 return data
         else:
-            with open(RUTA_HISTORIAL, 'w', encoding='utf-8') as f:
-                json.dump(SALES_EMPTY_DICT, f, indent=4, ensure_ascii=False)
+            st.warning('Realiza Una Venta Para Comenzar Almacenamiento de Registros')
 
     except(FileNotFoundError, json.JSONDecodeError, TypeError):
         st.error('Error Al Acceder Al Historial De Ventas')
 
 def get_folio(data:dict):
+    try:
+        df = pd.DataFrame(data=data)
 
-    df = pd.DataFrame(data=data)
+        folio = df['Folio']
+        folio = sorted(folio,reverse=True)
 
-    folio = df['Folio']
-    folio = sorted(folio,reverse=True)
-
-    if len(folio) > 0:
-        folio = folio[0]
-        folio += 1
-        return folio
-    else:
+        if len(folio) > 0:
+            folio = folio[0]
+            folio += 1
+            return folio
+        else:
+            return 0
+    except KeyError:
         return 0
 
 def acceso_a_productos():
@@ -71,11 +61,12 @@ def acceso_a_productos():
 def formulario_venta(folio:int, data:dict):
 
     df=pd.DataFrame(data=data)
+    df['Indice P'] = df['Producto']
     copia1 = df.copy()
     copia1['Precio Lista']=round(copia1['Precio Lista'])
     copia2 = df.copy()
     
-    df.set_index(keys='Producto',inplace=True)
+    df.set_index(keys='Indice P',inplace=True)
     copia1.set_index(keys='Producto',inplace=True)
     copia2.set_index(keys='Producto',inplace=True)
 
@@ -220,7 +211,7 @@ def formulario_venta(folio:int, data:dict):
             width='stretch'
             )
     with col_8:
-        registar_venta = st.button(
+        registrar_venta = st.button(
             label='Registrar Venta',
             key='registrar_venta',
             type='primary',
@@ -228,7 +219,7 @@ def formulario_venta(folio:int, data:dict):
             width='stretch'
         )
 
-    if calculo or registar_venta:
+    if calculo or registrar_venta:
 
         df_venta=df_venta.dropna(axis=0,how='any',subset=['Piezas','Producto'])
         df_venta=df_venta.drop_duplicates(subset=['Producto'],keep='first',ignore_index=True)
@@ -259,16 +250,16 @@ def formulario_venta(folio:int, data:dict):
         st.session_state.total_productos = df_union['Piezas'].sum()
         st.session_state.total_costo = df_union['Total'].sum()
 
-        if registar_venta:
+        if registrar_venta:
             
-            df_final = st.session_state.df
-            df_final = df_final[~(df_final['Existencias'] == 0)]
+            df_salida = st.session_state.df
+            df_salida = df_salida[~(df_salida['Existencias'] == 0)]
             
-            copia2 = copia2.loc[df_final['Producto'],:]
+            copia2 = copia2.loc[df_salida['Producto'],:]
             
-            resta = df_final.merge(copia2,how='left',on='Producto')
-            resta['Cantidad'] = resta['Cantidad'] - resta['Piezas']
-            resta = resta[[
+            df_ajuste = df_salida.merge(copia2,how='left',on='Producto')
+            df_ajuste['Cantidad'] = df_ajuste['Cantidad'] - df_ajuste['Piezas']
+            df_ajuste = df_ajuste[[
                 'Codigo',
                 'Producto',
                 'Cantidad',
@@ -281,7 +272,45 @@ def formulario_venta(folio:int, data:dict):
                 'Clave',
                 'Oficial'
                 ]]
-            st.dataframe(resta,hide_index=True)
+            
+            df.loc[df_ajuste['Producto']]=df_ajuste.values
+            df.reset_index(drop=True, inplace=True)
+            datos = df.to_dict(orient='list')
+            
+            df_ajuste['Folio'] = folio
+            df_ajuste['Fecha'] = HOY.isoformat()
+            df_ajuste['Cantidad'] = df_salida['Piezas']
+            df_ajuste = df_ajuste[[
+                'Folio',
+                'Fecha',
+                'Codigo',
+                'Producto',
+                'Cantidad',
+                'Categoría 1',
+                'Categoría 2',
+                'Unidad',
+                'Precio Compra',
+                'Porcentaje Ganancia',
+                'Precio Lista',
+                'Clave',
+                'Oficial'
+            ]]
+
+            with open(RUTA_PRODUCTOS,'w',encoding='utf-8') as f:
+                json.dump(datos,f,indent=4,ensure_ascii=False)
+
+            if os.path.exists(RUTA_HISTORIAL) and os.path.getsize(RUTA_HISTORIAL) > 0:
+                historial_actual = acceso_a_historial()
+                df_historial = pd.DataFrame(data=historial_actual)
+                datos_historial = pd.concat([df_historial,df_ajuste])
+                datos_historial = datos_historial.to_dict(orient='list')
+                with open(RUTA_HISTORIAL,'w',encoding='utf-8') as h:
+                    json.dump(datos_historial,h,indent=4,ensure_ascii=False)
+            else:
+                with open(RUTA_HISTORIAL,'w',encoding='utf-8') as h:
+                    json.dump(df_ajuste,h,indent=4,ensure_ascii=False)
+
+            st.success('Venta Registrada')
     
     if limpiar_tabla:
         try:
