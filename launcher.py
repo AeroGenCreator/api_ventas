@@ -53,5 +53,3 @@ elif st.session_state.get('authentication_status'):
     to_run = st.navigation(pages=iterable_pages, position='sidebar')
 
     to_run.run()
-
-

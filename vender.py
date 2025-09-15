@@ -280,6 +280,7 @@ def formulario_venta(folio:int, data:dict):
             df_ajuste['Folio'] = folio
             df_ajuste['Fecha'] = HOY.isoformat()
             df_ajuste['Cantidad'] = df_salida['Piezas']
+            df_ajuste['Total'] = df_salida['Piezas'] * df_salida['Precio']
             df_ajuste = df_ajuste[[
                 'Folio',
                 'Fecha',
@@ -292,6 +293,7 @@ def formulario_venta(folio:int, data:dict):
                 'Precio Compra',
                 'Porcentaje Ganancia',
                 'Precio Lista',
+                'Total',
                 'Clave',
                 'Oficial'
             ]]
@@ -308,7 +310,8 @@ def formulario_venta(folio:int, data:dict):
                     json.dump(datos_historial,h,indent=4,ensure_ascii=False)
             else:
                 with open(RUTA_HISTORIAL,'w',encoding='utf-8') as h:
-                    json.dump(df_ajuste,h,indent=4,ensure_ascii=False)
+                    datos_nuevos = df_ajuste.to_dict(orient='list')
+                    json.dump(datos_nuevos,h,indent=4,ensure_ascii=False)
 
             st.success('Venta Registrada')
     

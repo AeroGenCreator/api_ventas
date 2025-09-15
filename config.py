@@ -8,7 +8,7 @@ import lenguaje
 import streamlit as st
 
 l=lenguaje.tu_idioma()
-st.title(l.phrase[6])
+st.header(f':material/settings: {l.phrase[6]}')
 
 # Aqui accedo a los archivos de lenguaje.py, creo un widget de seleccion de idioma
 # El selector, guarda los cambio en configuracion_file.json
@@ -25,6 +25,8 @@ guardar_cambios = st.button(
     key='guardar_cambios',
     )
 
+st.write('ID vendedor/ID Fabricante para usb scanner')
+
 if guardar_cambios:
     st.rerun()
 
@@ -33,8 +35,6 @@ import streamlit as st
 from streamlit_scanner_component import scanner_component
 
 st.title('Prueba')
-
 texto_escaneado = scanner_component()
-
 st.write(texto_escaneado)
 

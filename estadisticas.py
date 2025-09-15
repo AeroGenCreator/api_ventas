@@ -4,4 +4,4 @@ import lenguaje
 
 l = lenguaje.tu_idioma()
 
-st.title(l.phrase[5])
+st.header(f':material/analytics: {l.phrase[5]}')

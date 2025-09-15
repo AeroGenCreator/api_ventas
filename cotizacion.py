@@ -214,5 +214,5 @@ def cotizacion_funcion():
 # Accededo al modulo de idioma, con la configuracion elegida por el usuario
 l=lenguaje.tu_idioma()
 # Titulo y llamo a la funcion de cotizacion:
-st.title(f':material/request_quote: {l.phrase[3]}')
+st.header(f':material/request_quote: {l.phrase[3]}')
 cotizacion_funcion()

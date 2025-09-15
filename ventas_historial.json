@@ -1,53 +1,71 @@
 {
     "Folio": [
+        0,
         1,
         2
     ],
     "Fecha": [
         "2025-09-15",
+        "2025-09-15",
         "2025-09-15"
     ],
     "Codigo": [
-        9236,
-        9236
+        6449,
+        6449,
+        6449
     ],
     "Producto": [
-        "A.A.A PILAS",
-        "A.A.A PILAS"
+        "AA BRAZO AA",
+        "AA BRAZO AA",
+        "AA BRAZO AA"
     ],
     "Cantidad": [
-        3,
+        2,
+        2,
         5
     ],
     "Categoría 1": [
-        "ENERGIZER",
-        "ENERGIZER"
+        "RUGO",
+        "RUGO",
+        "RUGO"
     ],
     "Categoría 2": [
-        "SIN CATEGORIA",
-        "SIN CATEGORIA"
+        "ACERO INOX",
+        "ACERO INOX",
+        "ACERO INOX"
     ],
     "Unidad": [
+        "Pieza",
         "Pieza",
         "Pieza"
     ],
     "Precio Compra": [
-        50,
-        50
+        100,
+        100,
+        100
     ],
     "Porcentaje Ganancia": [
-        0.5,
-        0.5
+        0.2,
+        0.2,
+        0.2
     ],
     "Precio Lista": [
-        75.0,
-        75.0
+        120.0,
+        120.0,
+        120.0
+    ],
+    "Total": [
+        240.0,
+        240.0,
+        600.0
     ],
     "Clave": [
-        "APC102",
-        "APC102"
+        "ABAZO12",
+        "ABAZO12",
+        "ABAZO12"
     ],
     "Oficial": [
+        true,
         true,
         true
     ]
