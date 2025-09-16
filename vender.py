@@ -253,6 +253,19 @@ def formulario_venta(folio:int, data:dict):
         if registrar_venta:
             
             df_salida = st.session_state.df
+
+            try:
+                st.session_state.df=DF_VACIO
+                st.session_state.total_productos = TOTAL_PRODUCTOS
+                st.session_state.total_costo = TOTAL_COSTO
+            except KeyError:
+                if 'df' not in st.session_state:
+                    st.session_state.df = DF_VACIO
+                if 'total_productos' not in st.session_state:
+                    st.session_state.total_productos = TOTAL_PRODUCTOS
+                if 'total_costo' not in st.session_state:
+                    st.session_state.total_costo = TOTAL_COSTO
+
             df_salida = df_salida[~(df_salida['Existencias'] == 0)]
             
             copia2 = copia2.loc[df_salida['Producto'],:]

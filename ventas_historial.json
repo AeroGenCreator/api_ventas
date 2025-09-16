@@ -2,9 +2,11 @@
     "Folio": [
         0,
         1,
-        2
+        2,
+        3
     ],
     "Fecha": [
+        "2025-09-15",
         "2025-09-15",
         "2025-09-15",
         "2025-09-15"
@@ -12,9 +14,11 @@
     "Codigo": [
         6449,
         6449,
+        6449,
         6449
     ],
     "Producto": [
+        "AA BRAZO AA",
         "AA BRAZO AA",
         "AA BRAZO AA",
         "AA BRAZO AA"
@@ -22,9 +26,11 @@
     "Cantidad": [
         2,
         2,
-        5
+        5,
+        3
     ],
     "Categoría 1": [
+        "RUGO",
         "RUGO",
         "RUGO",
         "RUGO"
@@ -32,9 +38,11 @@
     "Categoría 2": [
         "ACERO INOX",
         "ACERO INOX",
+        "ACERO INOX",
         "ACERO INOX"
     ],
     "Unidad": [
+        "Pieza",
         "Pieza",
         "Pieza",
         "Pieza"
@@ -42,9 +50,11 @@
     "Precio Compra": [
         100,
         100,
+        100,
         100
     ],
     "Porcentaje Ganancia": [
+        0.2,
         0.2,
         0.2,
         0.2
@@ -52,19 +62,23 @@
     "Precio Lista": [
         120.0,
         120.0,
+        120.0,
         120.0
     ],
     "Total": [
         240.0,
         240.0,
-        600.0
+        600.0,
+        360.0
     ],
     "Clave": [
+        "ABAZO12",
         "ABAZO12",
         "ABAZO12",
         "ABAZO12"
     ],
     "Oficial": [
+        true,
         true,
         true,
         true

@@ -1,6 +1,6 @@
 {
     "configuracion": {
-        "idioma": "Español",
+        "idioma": "English",
         "traducciones": {
             "Español": [
                 "Inicio",
@@ -20,6 +20,7 @@
                 "Statistics",
                 "Settings"
             ]
-        }
+        },
+        "caja fondo": 1500
     }
 }

@@ -3612,8 +3612,7 @@
         2,
         2618,
         1,
-        4504,
-        6449
+        4504
     ],
     "Producto": [
         "ABRAZADERA BRONCE 1 1/2\"",
@@ -7228,8 +7227,7 @@
         "YEE PVC UNIC. 4\" X 4\"",
         "YEE RED. UNICOPLE PVC 2\"X 11/2\"",
         "YESO",
-        "ZAPAPICO 5 LBS TRUPER C/MNGO ZP-5MX",
-        "AA BRAZO AA"
+        "ZAPAPICO 5 LBS TRUPER C/MNGO ZP-5MX"
     ],
     "Cantidad": [
         0,
@@ -10844,8 +10842,7 @@
         0,
         0,
         0,
-        0,
-        5
+        0
     ],
     "Categoría 1": [
         "URREA",
@@ -14460,8 +14457,7 @@
         "REXOLIT",
         "REXOLIT",
         "SIN MARCA",
-        "TRUPER",
-        "RUGO"
+        "TRUPER"
     ],
     "Categoría 2": [
         "BRONCE",
@@ -18076,8 +18072,7 @@
         "PVC",
         "PVC",
         "YESO",
-        "METAL",
-        "ACERO INOX"
+        "METAL"
     ],
     "Unidad": [
         "Pieza",
@@ -21692,7 +21687,6 @@
         "Pieza",
         "Pieza",
         "Kilo",
-        "Pieza",
         "Pieza"
     ],
     "Precio Compra": [
@@ -25308,8 +25302,7 @@
         1,
         1,
         1,
-        1,
-        100
+        1
     ],
     "Porcentaje Ganancia": [
         0.0,
@@ -28924,8 +28917,7 @@
         0.0,
         0.0,
         0.0,
-        0.0,
-        0.2
+        0.0
     ],
     "Precio Lista": [
         108.18,
@@ -32540,8 +32532,7 @@
         82.3706907051724,
         24.568965,
         6.034,
-        0.0,
-        120.0
+        0.0
     ],
     "Clave": [
         "ABRUR038",
@@ -36156,11 +36147,9 @@
         "YEERXU100.100",
         "YEERXU50.038",
         "YESSMK",
-        "ZAPTRZP5MX",
-        "ABAZO12"
+        "ZAPTRZP5MX"
     ],
     "Oficial": [
-        true,
         true,
         true,
         true,

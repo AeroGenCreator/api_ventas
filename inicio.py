@@ -1,6 +1,7 @@
 import json
 import datetime
 
+from config import acceso_fondo_caja
 import lenguaje
 from vender import acceso_a_historial
 
@@ -42,6 +43,15 @@ def margen_beneficio_bruto_hoy():
     except KeyError:
         return 0
 
+def total_productos_del_dia(data=historial,fecha=HOY):
+    try:
+        df = pd.DataFrame(data=historial)
+        filtro = df[df['Fecha']==HOY]
+        productos_total = filtro['Cantidad'].sum()
+        return productos_total
+    except KeyError:
+        return 0
+    
 venta = venta_total_de_hoy()
 venta = str(venta)
 venta = '$ ' + venta
@@ -54,13 +64,37 @@ margen_beneficio = margen_beneficio_bruto_hoy()
 margen_beneficio = str(margen_beneficio)
 margen_beneficio = '% ' + margen_beneficio
 
-col_1, col_2 = st.columns([1,3])
-col_1.image('pro.jpg',width=95,caption='Bienvenido')
-col_2.metric(label='Venta Total Del Dia',value=venta,border=True)
+fondo = acceso_fondo_caja()
+fondo = str(fondo)
+fondo = '$ ' + fondo
 
-col_3,col_4,col_5 = st.columns(3)
+caja = acceso_fondo_caja()
+extra = venta_total_de_hoy()
+total_en_caja = extra + caja
+total_en_caja = str(total_en_caja)
+total_en_caja = '$ ' + total_en_caja
 
-col_4.metric(label='Beneficio Bruto Del Dia',value=beneficio,border=True)
-col_5.metric(label='Beneficio Bruto Margen',value=margen_beneficio,border=True)
+tab_1, tab_2 = st.tabs(['Inicio','Corte'])
 
-st.button(label='Corte Del Dia',key='Corte del Dia',width='stretch',type='primary')
+with tab_1:
+    col_1, col_2 = st.columns([1,3])
+
+    col_1.image('pro.jpg',width=95,caption='Providencia')
+    col_2.metric(label='Venta Total Del Dia',value=venta,border=True)
+
+    col_3,col_4,col_5 = st.columns(3)
+
+    col_3.metric(label='Total De Productos Vendidos',value=total_productos_del_dia(),border=True)
+    col_4.metric(label='Beneficio Bruto Del Dia',value=beneficio,border=True)
+    col_5.metric(label='Beneficio Bruto Margen',value=margen_beneficio,border=True)
+
+    col_6, col_7 = st.columns(2)
+    col_6.metric(label='Fondo de Caja', value=fondo, border=True,width='stretch')
+    col_7.metric(label='Total En Caja', value=total_en_caja, border=True,width='stretch')
+
+with tab_2:
+    st.markdown(f'Total Caja: {total_en_caja}')
+    st.markdown(f'Venta Total: {venta}')
+    st.markdown(f'Fondo Caja: {fondo}')
+
+    st.button(label='Corte Del Dia',key='Corte del Dia',width='stretch',type='primary')
