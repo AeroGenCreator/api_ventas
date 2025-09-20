@@ -7,6 +7,7 @@ import lenguaje
 import streamlit as st
 import pandas as pd
 from escpos.printer import Usb
+from fpdf import FPDF
 
 l=lenguaje.tu_idioma()
 
@@ -253,7 +254,9 @@ def formulario_venta(folio:int, data:dict):
         if registrar_venta:
             
             df_salida = st.session_state.df
-
+            productos_vendidos = st.session_state.total_productos
+            costos_totales = st.session_state.total_costo
+            
             try:
                 st.session_state.df=DF_VACIO
                 st.session_state.total_productos = TOTAL_PRODUCTOS
@@ -265,8 +268,16 @@ def formulario_venta(folio:int, data:dict):
                     st.session_state.total_productos = TOTAL_PRODUCTOS
                 if 'total_costo' not in st.session_state:
                     st.session_state.total_costo = TOTAL_COSTO
+            
+            # Filtro los articulos que no pueden ser vendidos por falta de inventario y aquellos de los cuales no se tenga inventario.
+            df_salida['Mascara'] = (df_salida['Existencias'] - df_salida['Piezas']) < 0
 
-            df_salida = df_salida[~(df_salida['Existencias'] == 0)]
+            if df_salida['Mascara'].any():
+                st.warning('No Se Puede Realizar La Venta, Posiblemente No Hay Inventario Para La Cantidad Deseada')
+                st.info('La Tabla Se Limpiara Nuevamente, Puedes Hacerlo Manualmente Si Prefieres')
+                return
+            
+            df_salida.drop(inplace=True,labels='Mascara',axis=1)
             
             copia2 = copia2.loc[df_salida['Producto'],:]
             
@@ -327,7 +338,74 @@ def formulario_venta(folio:int, data:dict):
                     json.dump(datos_nuevos,h,indent=4,ensure_ascii=False)
 
             st.success('Venta Registrada')
-    
+
+            # Aqui comienza el codigo que genera la nota impresa como hoja tamanho carta pdf:
+            class PDF(FPDF):
+                def __init__(self, orientation = "portrait", unit = "mm", format = "letter"):
+                    super().__init__(orientation, unit, format)
+                    self.add_font(family='ArialUnicodeMS',fname='arial-unicode-ms.ttf',uni=True)
+                def header(self):
+                    self.set_text_color(0,0,0)
+                    self.set_font(family='ArialUnicodeMS',size=20)
+                    self.image('pro.jpg',10,8,16)
+                    self.cell(20,6,txt='Ticket De Venta',border=False,center=True,ln=True,align='C')
+                    self.ln(15)
+                    return super().header()
+                def footer(self):
+                    self.set_y(-10)
+                    self.set_font(family='ArialUnicodeMS',size=7)
+                    self.cell(0,6,txt=f'Pagina {self.page_no()}/{{nb}}',center=True)
+                    return super().footer()
+
+            pdf = PDF()
+            # Salto de pagina automatico
+            pdf.set_auto_page_break(auto=True,margin=10)
+
+            # Parametros para la hoja PDF
+            pdf.add_page()
+            pdf.set_font(family='ArialUnicodeMS',size=9)
+            pdf.set_line_width(0.1)
+            pdf.set_draw_color(224,224,224)
+            pdf.set_fill_color(224,224,224)#204,255,229
+            pdf.set_text_color(96,96,96)
+
+            # Datos Extras:
+            pdf.cell(98,6,txt=f'Direccion: {DIRECCION}',border=True,align='C')
+            pdf.cell(49,6,txt=f'Fecha: {HOY.isoformat()}',border=True,align='C')
+            pdf.cell(49,6,txt=f'No. De Folio: {str(folio)}',border=True,align='C',ln=True)
+            # Linea Muerta
+            pdf.cell(0,2,fill=True,ln=True)
+            # Nombres De las Columnas
+            pdf.cell(16,6,txt='UNI.',border=True,align='C')
+            pdf.cell(122,6,txt='PRODUCTO',border=True,align='L')
+            pdf.cell(29,6,text='PRECIO U.',border=True,align='R')
+            pdf.cell(29,6,txt='TOTAL',border=True,align='R', ln=True)
+            # Linea Muerta
+            pdf.cell(0,2,fill=True,ln=True)
+            # Iteramos en la tabla con datos de venta:
+            for i,row in df_salida.iterrows():
+                pdf.cell(16,6,txt=f'{row['Piezas']}',border=True,align='C') 
+                pdf.cell(122,6,txt=f'{row['Producto']}',border=True,align='L') 
+                pdf.cell(29,6,txt=f'$ {row['Precio']}',border=True,align='R') 
+                pdf.cell(29,6,txt=f'$ {row['Total']}', ln=True,border=True,align='R')
+            # Tamanho de la pagina pdf:
+            half_page = (pdf.w / 2) - 10
+            pdf.cell(0,2,fill=True,ln=True)
+            pdf.cell(half_page,6,txt=f'Total De Productos: {productos_vendidos}', border=True, align='C')
+            pdf.cell(half_page,6,txt=f'Total De Venta: $ {costos_totales}', border=True,align='C',ln=True)
+
+            pdf_output = bytes(pdf.output(dest='S'))
+
+            st.download_button(
+                    label="Descargar PDF",
+                    type='primary',
+                    data=pdf_output,
+                    key='descarga_venta_recibo',
+                    file_name="Ticket Venta.pdf",
+                    mime="application/pdf",
+                    width='stretch'
+                )
+
     if limpiar_tabla:
         try:
             st.session_state.df=DF_VACIO

@@ -61,14 +61,6 @@ if fondo:
     cambiar_fondo(fondo)
 st.divider()
 
-# Esto se eliminara despues
-import streamlit as st
-from streamlit_scanner_component import scanner_component
-
-st.title('Prueba')
-texto_escaneado = scanner_component()
-st.write(texto_escaneado)
-
 guardar_cambios = st.button(
     label='Guardar Cambios',
     key='guardar_cambios',

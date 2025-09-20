@@ -30,10 +30,10 @@ except Exception as e:
     st.error(e)
 
 if st.session_state.get('authentication_status') is False:
-    st.error('Error Contraae;a Passsword')
+    st.error('Wrong Passsword')
 
 if st.session_state.get('authentication_status') is None:
-    st.warning('Ingresa u y pass')
+    st.warning('Type A Valid Password')
 
 elif st.session_state.get('authentication_status'):
     authenticator.logout(location='sidebar', button_name='Cerrrar Sesion')
